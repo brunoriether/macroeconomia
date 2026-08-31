@@ -1,0 +1,6 @@
+# lixo de sistema e de editor
+Thumbs.db
+desktop.ini
+.DS_Store
+.vscode/
+.idea/

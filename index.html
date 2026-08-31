@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bússola Macro</title>
+<meta name="description" content="Simulador de modelos macroeconômicos de curto prazo: cruz keynesiana, IS-LM e economia aberta.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap">
+<link rel="stylesheet" href="estilo.css">
+<style>
+.top { padding-bottom: 14px; }
+.top h1 { font-size: clamp(30px, 5.5vw, 46px); }
+.lede { margin: 10px 0 0; max-width: 52ch; font-family: var(--serif); font-size: 16px; line-height: 1.45; color: var(--ink-2); }
+.pick { margin: 26px 0 10px; font-size: 10.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>Bússola <b>Macro</b></h1>
+      <p class="lede">Arraste os controles e veja as curvas se moverem na hora. Cada modelo mostra o que acontece com a renda e com os juros quando o governo, o Banco Central ou o mercado mudam de ideia.</p>
+    </div>
+  </header>
+
+  <p class="pick">Escolha por onde começar</p>
+
+  <nav class="choose" aria-label="Escolha o modelo">
+
+    <a class="card" href="modelo-simplificado.html">
+      <div class="card-top">
+        <span class="card-lvl">Nível 1 · Simplificado</span>
+      </div>
+      <h2 class="card-name">Cruz keynesiana<span>Renda e despesa</span></h2>
+      <div class="card-art">
+        <svg viewBox="0 0 200 120" role="img" aria-label="Diagrama: a reta de demanda agregada cruzando a reta de 45 graus.">
+          <line x1="52" y1="12" x2="52" y2="108" stroke="var(--ink-3)" stroke-width="1"></line>
+          <line x1="52" y1="108" x2="148" y2="108" stroke="var(--ink-3)" stroke-width="1"></line>
+          <line x1="52" y1="108" x2="148" y2="12" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="4 4"></line>
+          <line x1="52" y1="79" x2="148" y2="22" stroke="var(--is)" stroke-width="2.25"></line>
+          <circle cx="124" cy="36" r="6.5" fill="none" stroke="var(--ink)" stroke-width="1.5"></circle>
+          <circle cx="124" cy="36" r="2" fill="var(--ink)"></circle>
+        </svg>
+      </div>
+      <p class="card-d">Só o mercado de bens: a demanda decide o produto e o multiplicador age inteiro. Comece por aqui se o juro ainda não entrou na matéria.</p>
+      <div class="card-meta"><span>5 controles</span><span>6 cenários</span></div>
+      <span class="card-go">Abrir →</span>
+    </a>
+
+    <a class="card" href="modelo-intermediario.html">
+      <div class="card-top">
+        <span class="card-lvl">Nível 2 · Intermediário</span>
+      </div>
+      <h2 class="card-name">IS-LM<span>Bens e moeda</span></h2>
+      <div class="card-art">
+        <svg viewBox="0 0 200 120" role="img" aria-label="Diagrama: as curvas IS e LM se cruzando.">
+          <line x1="52" y1="12" x2="52" y2="108" stroke="var(--ink-3)" stroke-width="1"></line>
+          <line x1="52" y1="108" x2="148" y2="108" stroke="var(--ink-3)" stroke-width="1"></line>
+          <line x1="52" y1="26" x2="148" y2="98" stroke="var(--is)" stroke-width="2.25"></line>
+          <line x1="52" y1="98" x2="148" y2="26" stroke="var(--lm)" stroke-width="2.25"></line>
+          <circle cx="100" cy="62" r="6.5" fill="none" stroke="var(--ink)" stroke-width="1.5"></circle>
+          <circle cx="100" cy="62" r="2" fill="var(--ink)"></circle>
+        </svg>
+      </div>
+      <p class="card-d">Entram o juro e a moeda. É aqui que o gasto público começa a empurrar o juro para cima e a tirar espaço do investimento privado.</p>
+      <div class="card-meta"><span>11 controles</span><span>12 cenários</span></div>
+      <span class="card-go">Abrir →</span>
+    </a>
+
+    <div class="card soon">
+      <div class="card-top">
+        <span class="card-lvl">Nível 3 · Avançado</span>
+        <span class="card-chip">em breve</span>
+      </div>
+      <h2 class="card-name">Mundell-Fleming<span>Economia aberta</span></h2>
+      <div class="card-art">
+        <svg viewBox="0 0 200 120" role="img" aria-label="Diagrama: as curvas IS e LM cruzadas por uma terceira curva, a BP.">
+          <line x1="52" y1="12" x2="52" y2="108" stroke="var(--ink-3)" stroke-width="1"></line>
+          <line x1="52" y1="108" x2="148" y2="108" stroke="var(--ink-3)" stroke-width="1"></line>
+          <line x1="52" y1="26" x2="148" y2="98" stroke="var(--is)" stroke-width="2.25"></line>
+          <line x1="52" y1="98" x2="148" y2="26" stroke="var(--lm)" stroke-width="2.25"></line>
+          <line x1="52" y1="62" x2="148" y2="62" stroke="#3a9e73" stroke-width="2.25" stroke-dasharray="6 4"></line>
+          <circle cx="100" cy="62" r="6.5" fill="none" stroke="var(--ink)" stroke-width="1.5"></circle>
+        </svg>
+      </div>
+      <p class="card-d">Câmbio, exportações e capital entrando e saindo do país: o dólar contra o real.</p>
+      <div class="card-meta"><span>em construção</span></div>
+      <span class="card-go">Em breve</span>
+    </div>
+
+  </nav>
+
+  <p class="assin solo"><b>Criado pelo aluno Bruno Alves Riether</b>Matrícula 261012139</p>
+
+</div>
+
+</body>
+</html>

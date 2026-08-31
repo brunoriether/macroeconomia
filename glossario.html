@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Glossário · Bússola Macro</title>
+<meta name="description" content="Os termos dos modelos de curto prazo, definidos.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap">
+<link rel="stylesheet" href="estilo.css">
+<style>
+.wrap { max-width: 1080px; }
+.search {
+  display: block; width: 100%; margin: 22px 0 4px;
+  background: var(--panel); border: 1px solid var(--rule); color: var(--ink);
+  font-family: var(--sans); font-size: 15px; padding: 12px 14px;
+}
+.search::placeholder { color: var(--ink-3); }
+
+h2.sec {
+  display: flex; align-items: center; gap: 10px; margin: 32px 0 2px;
+  font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3);
+}
+h2.sec::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+h2.sec[hidden], .list[hidden] { display: none; }
+
+.list { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 0 40px; margin: 0; }
+.entry { padding: 15px 0; border-bottom: 1px solid var(--rule-2); }
+.entry[hidden] { display: none; }
+.entry dt { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; font-size: 14px; font-weight: 600; }
+.entry .u { font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); font-weight: 400; }
+.entry .key { width: 11px; height: 3px; flex: none; align-self: center; }
+.entry .badge {
+  font-family: var(--mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ink-3); border: 1px solid var(--rule); padding: 1px 5px; font-weight: 400;
+}
+.entry dd { margin: 6px 0 0; font-family: var(--serif); font-size: 14.5px; line-height: 1.5; color: var(--ink-2); }
+.entry .eff { margin: 5px 0 0; font-style: italic; font-size: 13.5px; color: var(--ink-3); }
+.empty { padding: 26px 0; font-family: var(--serif); font-size: 15px; color: var(--ink-3); }
+.empty[hidden] { display: none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>Glossário <b>Macro</b></h1>
+      <p>Os termos dos dois modelos, definidos. Dentro do simulador cada um deles também abre ali mesmo, ao passar o mouse ou clicar no ⓘ.</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <a class="btn" href="index.html">← Modelos</a>
+      <a class="btn" href="modelo-simplificado.html">Nível 1</a>
+      <a class="btn" href="modelo-intermediario.html">Nível 2</a>
+    </div>
+  </header>
+
+  <label for="q" style="position:absolute;left:-9999px">Buscar termo</label>
+  <input class="search" id="q" type="search" placeholder="Buscar termo…" autocomplete="off">
+
+  <h2 class="sec">Conceitos</h2>
+  <dl class="list" id="conceitos"></dl>
+
+  <h2 class="sec">Parâmetros · nível 1, cruz keynesiana</h2>
+  <dl class="list" id="ps"></dl>
+
+  <h2 class="sec">Parâmetros · nível 2, IS-LM</h2>
+  <dl class="list" id="pi"></dl>
+
+  <p class="empty" id="empty" hidden>Nenhum termo encontrado.</p>
+
+  <p class="foot">Modelos de curto prazo, com preços fixos e economia fechada. A escala monetária (R$ bi) é arbitrária mas consistente entre todas as variáveis — o que importa são as proporções e os sentidos, não os valores absolutos.</p>
+
+  <p class="assin"><b>Criado pelo aluno Bruno Alves Riether</b>Matrícula 261012139</p>
+
+</div>
+
+<script src="modelo-simples.js"></script>
+<script src="modelo-intermediario.js"></script>
+<script>
+"use strict";
+var $ = function (id) { return document.getElementById(id); };
+var S = MODELO_SIMPLES, I = MODELO_INTER;
+
+/* Um conceito pode existir nos dois modelos com a mesma chave. Quando existe,
+   vale a definição do nível 2, que é a mais completa — mas a etiqueta registra
+   que ele já aparece no nível 1. */
+var conceitos = {};
+Object.keys(S.TERMS).forEach(function (k) {
+  if (k.indexOf("p:") === 0) return;
+  conceitos[k] = { t:S.TERMS[k], niveis:["1"] };
+});
+Object.keys(I.TERMS).forEach(function (k) {
+  if (k.indexOf("p:") === 0) return;
+  if (conceitos[k]) { conceitos[k].t = I.TERMS[k]; conceitos[k].niveis.push("2"); }
+  else conceitos[k] = { t:I.TERMS[k], niveis:["2"] };
+});
+
+function entrada(t, opts) {
+  opts = opts || {};
+  var p = opts.param;
+  var key = p ? '<span class="key" style="background:var(--' + (p.curve === "LM" ? "lm" : "is") + ')"></span>' : "";
+  var badge = opts.niveis ? '<span class="badge">nível ' + opts.niveis.join(" e ") + "</span>" : "";
+  var busca = (t.t + " " + t.d).toLowerCase().replace(/"/g, "");
+  return '<div class="entry" data-busca="' + busca + '">' +
+    "<dt>" + key + t.t + (t.u ? '<span class="u">' + t.u + "</span>" : "") + badge + "</dt>" +
+    "<dd>" + t.d + "</dd>" +
+    (p ? '<dd class="eff">' + p.eff + "</dd>" : "") +
+  "</div>";
+}
+
+$("conceitos").innerHTML = Object.keys(conceitos)
+  .map(function (k) { return conceitos[k]; })
+  .sort(function (a, b) { return a.t.t.localeCompare(b.t.t, "pt-BR"); })
+  .map(function (c) { return entrada(c.t, { niveis:c.niveis }); }).join("");
+
+$("ps").innerHTML = S.PARAMS.map(function (p) { return entrada(S.TERMS["p:" + p.id], { param:p }); }).join("");
+$("pi").innerHTML = I.PARAMS.map(function (p) { return entrada(I.TERMS["p:" + p.id], { param:p }); }).join("");
+
+$("q").addEventListener("input", function () {
+  var q = this.value.trim().toLowerCase(), vis = 0;
+  Array.prototype.forEach.call(document.querySelectorAll(".entry"), function (e) {
+    var on = !q || e.dataset.busca.indexOf(q) >= 0;
+    e.hidden = !on;
+    if (on) vis++;
+  });
+  $("empty").hidden = vis > 0;
+  Array.prototype.forEach.call(document.querySelectorAll("h2.sec"), function (h) {
+    var dl = h.nextElementSibling;
+    var vazio = dl.querySelectorAll(".entry:not([hidden])").length === 0;
+    h.hidden = vazio; dl.hidden = vazio;
+  });
+});
+</script>
+</body>
+</html>

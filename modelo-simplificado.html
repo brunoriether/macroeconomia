@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cruz keynesiana · Bússola Macro</title>
+<meta name="description" content="Modelo simplificado: o produto é determinado pela demanda. Mexa nos parâmetros e veja o multiplicador em ação.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap">
+<link rel="stylesheet" href="estilo.css">
+<style>
+/* A reta de 45° só é 45° se as duas escalas forem iguais — por isso a área de
+   plotagem é quadrada e o gráfico tem largura máxima. */
+.plate { max-width: 640px; }
+.group-title:first-child { margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>Cruz <b>keynesiana</b></h1>
+      <p>O produto é determinado pela demanda. Sem juro, sem moeda: só o multiplicador.</p>
+    </div>
+    <a class="btn" href="index.html">← Modelos</a>
+  </header>
+
+  <main class="app">
+
+    <section class="col-ctrl" aria-label="Parâmetros do modelo">
+      <div id="painel"></div>
+    </section>
+
+    <section class="col-out">
+
+      <div class="toolbar">
+        <div class="menu-wrap">
+          <button type="button" class="btn" id="scenBtn" aria-haspopup="true" aria-expanded="false" aria-controls="scenMenu">
+            Cenário: <b id="scenNow">A economia em repouso</b><span class="caret">▾</span>
+          </button>
+          <div class="menu" id="scenMenu" role="menu" aria-labelledby="scenBtn" hidden></div>
+        </div>
+        <span class="mod" id="modChip" data-on="nao">modificado</span>
+        <div class="spacer"></div>
+        <button type="button" class="btn" id="resetBtn">Reiniciar</button>
+      </div>
+
+      <div class="briefing" id="briefing">
+        <p class="brief-story" id="briefStory"></p>
+      </div>
+
+      <div class="plate">
+        <svg id="chart" viewBox="0 0 570 538" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="cT cD">
+          <title id="cT">Cruz keynesiana</title>
+          <desc id="cD">Renda no eixo horizontal e demanda agregada no vertical, nas mesmas unidades. A reta tracejada de 45° marca onde demanda e produto são iguais. A reta de demanda agregada a cruza no produto de equilíbrio.</desc>
+          <defs><clipPath id="clip"><rect id="clipR" x="0" y="0" width="0" height="0"></rect></clipPath></defs>
+          <g id="grid"></g><g id="axes"></g>
+          <g id="ghosts" clip-path="url(#clip)" opacity="0"></g>
+          <g id="curves" clip-path="url(#clip)"></g>
+          <g id="marks"></g><g id="labels"></g>
+        </svg>
+        <p class="watch" id="watch"><span class="brief-tag">O que observar</span><span id="briefWatch"></span></p>
+      </div>
+
+      <div class="results">
+        <div class="result">
+          <div class="result-label" id="labY"></div>
+          <div class="result-val"><u>R$ </u><span id="outY">—</span><u> bi</u></div>
+          <div class="result-delta" id="dY"></div>
+        </div>
+        <div class="result">
+          <div class="result-label" id="labM"></div>
+          <div class="result-val"><span id="outM">—</span><u> ×</u></div>
+          <div class="result-delta" id="dM"></div>
+        </div>
+        <div class="result">
+          <div class="result-label" id="labK"></div>
+          <div class="compo" id="compo"></div>
+          <div class="result-delta" id="dK"></div>
+        </div>
+      </div>
+
+      <p class="alert" id="alert"><span id="alertTxt"></span></p>
+
+      <section class="forces">
+        <h2 class="eyebrow">Forças em ação</h2>
+        <div class="chain" id="chain" aria-live="polite"></div>
+
+        <div class="meter-block">
+          <p class="meter-cap" id="roundsCap"></p>
+          <div class="rounds" id="rounds"></div>
+        </div>
+      </section>
+
+      <section class="forces">
+        <h2 class="eyebrow">As contas</h2>
+        <div class="contas" id="eqs"></div>
+      </section>
+
+    </section>
+  </main>
+
+  <p class="foot">Modelo de renda e despesa, de curto prazo e com preços fixos. Aqui o investimento é um número dado: nada nele reage ao juro, porque juro ainda não existe neste modelo. É essa simplificação que o <a href="modelo-intermediario.html" style="color:var(--ink-2)">modelo intermediário</a> desfaz — e é lá que o multiplicador deixa de agir inteiro.</p>
+
+  <p class="assin"><b>Criado pelo aluno Bruno Alves Riether</b>Matrícula 261012139</p>
+
+</div>
+
+<div class="pop" id="pop" role="tooltip" hidden>
+  <strong class="pop-t" id="popT"></strong>
+  <span class="pop-u" id="popU"></span>
+  <p class="pop-d" id="popD"></p>
+  <p class="pop-e" id="popE"></p>
+</div>
+
+<script src="modelo-simples.js"></script>
+<script>
+"use strict";
+
+var M = MODELO_SIMPLES;
+var EPS = M.EPS, PARAMS = M.PARAMS, P_BY_ID = M.P_BY_ID, TERMS = M.TERMS,
+    CHAINS = M.CHAINS, SCENARIOS = M.SCENARIOS, GROUPS = M.GROUPS;
+
+/* ═══ formatação pt-BR ═══ */
+var nf = function (d) { return new Intl.NumberFormat("pt-BR", { minimumFractionDigits:d, maximumFractionDigits:d }); };
+var f0 = nf(0), f1 = nf(1), f2 = nf(2);
+function minus(t) { return t.replace(/-/g, "−"); }
+function fmt(v, d) { return isFinite(v) ? minus(nf(d || 0).format(v)) : "—"; }
+function fmtP(p, v) { return isFinite(v) ? (p.u.pre || "") + minus(nf(p.dec || 0).format(v)) + (p.u.suf || "") : "—"; }
+/* O sinal sai do valor JA arredondado: senao um resto de ponto flutuante
+   da −1e-15 vira "−0" na tela. */
+function sign(v, d) {
+  if (!isFinite(v)) return "—";
+  var r = Number(v.toFixed(d || 0));
+  return (r > 0 ? "+" : r < 0 ? "−" : "") + nf(d || 0).format(Math.abs(r));
+}
+/* Uma linha: rótulo, a fórmula (apagada) e a conta com os números embaixo. */
+function grupo(cls, nome, sub, linhas) {
+  return '<div class="eqgroup ' + cls + '"><div class="eqgroup-h">' + nome +
+    "<span>" + sub + "</span></div>" +
+    linhas.map(function (l) {
+      var unid = l[3] ? "<u>" + l[3] + "</u>" : "";
+      return '<div class="eqrow">' +
+        '<span class="eqlab">' + l[0] + "</span>" +
+        (l[1] ? '<span class="eqform">' + l[1] + "</span>" : "") +
+        '<span class="eqval"><span class="calc">' + l[2] + "</span>" + unid + "</span></div>";
+    }).join("") + "</div>";
+}
+
+/* Soma de componentes, começando pelo total: a linha dos números espelha a
+   fórmula acima termo por termo, e o olho não precisa reorganizar nada. */
+function soma(partes, total, d) {
+  return fmt(total, d || 0) + " = " + partes.map(function (v, i) {
+    return (i === 0 ? (v < 0 ? "\u2212" : "") : (v < 0 ? " \u2212 " : " + ")) + fmt(Math.abs(v), d || 0);
+  }).join("");
+}
+
+/* "a \u00d7 b" com o sinal de multiplicação de verdade. */
+function vezes(a, b) { return a + " \u00d7 " + b; }
+
+function term(key, label) {
+  var txt = label || TERMS[key].t;
+  return txt + '<button type="button" class="term" data-term="' + key +
+    '" aria-expanded="false" aria-label="Definição: ' + txt.replace(/"/g, "") + '">ⓘ</button>';
+}
+
+/* ═══ estado ═══ */
+var state = M.baseState();
+var ghost = null, lastMove = null, dragBase = null, animId = 0, pendingTarget = null;
+/* activeScenario = o cenário está intacto (null se o usuário mexeu nos
+   controles). loadedScenario = qual cenário está carregado, e esse nunca
+   fica vazio — é o que mantém o texto na tela e o gráfico parado. */
+var activeScenario = "base", loadedScenario = "base";
+var view = { max:2000 };                       // as DUAS escalas usam o mesmo máximo
+
+var PAD = { l:66, r:44, t:26, b:52 };
+var VB = { w:570, h:538 };
+var PLOT = { x:PAD.l, y:PAD.t, w:VB.w - PAD.l - PAD.r, h:VB.h - PAD.t - PAD.b };
+
+var $ = function (id) { return document.getElementById(id); };
+var NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, text) {
+  var n = document.createElementNS(NS, tag);
+  for (var a in attrs) if (attrs[a] != null) n.setAttribute(a, attrs[a]);
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+
+/* ═══ escalas — iguais nos dois eixos, senão a reta de 45° mente ═══ */
+function sx(Y)  { return PLOT.x + Y / view.max * PLOT.w; }
+function sy(DA) { return PLOT.y + (1 - DA / view.max) * PLOT.h; }
+function ix(px) { return (px - PLOT.x) / PLOT.w * view.max; }
+
+var NICE = [500, 1000, 2000, 4000, 8000, 16000, 32000];
+function fitView(eq) {
+  if (!isFinite(eq.Y)) return;
+  var i = NICE.indexOf(view.max); if (i < 0) i = 2;
+  while (i < NICE.length - 1 && eq.Y > 0.86 * NICE[i]) i++;
+  while (i > 0 && eq.Y < 0.28 * NICE[i - 1]) i--;
+  view.max = NICE[i];
+}
+function resetView() { view.max = 2000; }
+
+function ticks(max, count) {
+  var raw = max / count, mag = Math.pow(10, Math.floor(Math.log10(raw))), n = raw / mag;
+  var step = (n >= 5 ? 10 : n >= 2.5 ? 5 : n >= 2 ? 2.5 : n >= 1 ? 2 : 1) * mag;
+  var out = [];
+  for (var v = 0; v <= max + EPS; v += step) out.push(v);
+  return out;
+}
+
+/* ═══ desenho ═══ */
+
+function drawFrame() {
+  var g = $("grid"), a = $("axes");
+  g.textContent = ""; a.textContent = "";
+  $("clipR").setAttribute("x", PLOT.x); $("clipR").setAttribute("y", PLOT.y);
+  $("clipR").setAttribute("width", PLOT.w); $("clipR").setAttribute("height", PLOT.h);
+
+  var tk = ticks(view.max, 4);
+  tk.forEach(function (v) {
+    var y = sy(v);
+    g.appendChild(el("line", { class:"grid-line", x1:PLOT.x, y1:y, x2:PLOT.x + PLOT.w, y2:y }));
+    a.appendChild(el("text", { class:"tick-text", x:PLOT.x - 10, y:y + 4, "text-anchor":"end" }, f0.format(v)));
+    a.appendChild(el("text", { class:"tick-text", x:sx(v), y:PLOT.y + PLOT.h + 20, "text-anchor":"middle" }, f0.format(v)));
+  });
+
+  a.appendChild(el("line", { class:"axis", x1:PLOT.x, y1:PLOT.y, x2:PLOT.x, y2:PLOT.y + PLOT.h }));
+  a.appendChild(el("line", { class:"axis", x1:PLOT.x, y1:PLOT.y + PLOT.h, x2:PLOT.x + PLOT.w, y2:PLOT.y + PLOT.h }));
+  a.appendChild(el("text", { class:"axis-title", x:PLOT.x - 8, y:PLOT.y - 10, "text-anchor":"start" }, "DEMANDA"));
+  a.appendChild(el("text", { class:"axis-title", x:PLOT.x + PLOT.w, y:PLOT.y + PLOT.h + 40, "text-anchor":"end" }, "RENDA"));
+}
+
+/* a reta DA = q + m·Y, recortada ao quadro */
+function pathDA(line) {
+  var q = line.q, m = line.m;
+  var y0 = q, y1 = q + m * view.max;
+  var pts = [];
+  // percorre em Y e corta onde a reta sai pelo topo ou pela base
+  var lo = 0, hi = view.max;
+  if (m > EPS) {
+    if (q > view.max) return null;
+    hi = Math.min(hi, (view.max - q) / m);
+    if (q < 0) lo = Math.max(lo, -q / m);
+  } else if (q < 0 || q > view.max) return null;
+  if (hi - lo <= EPS) return null;
+  return "M " + sx(lo).toFixed(2) + " " + sy(q + m * lo).toFixed(2) +
+         " L " + sx(hi).toFixed(2) + " " + sy(q + m * hi).toFixed(2);
+}
+
+function draw(eq) {
+  drawFrame();
+  var cl = $("curves"), mk = $("marks"), lb = $("labels"), gh = $("ghosts");
+  cl.textContent = ""; mk.textContent = ""; lb.textContent = ""; gh.textContent = "";
+
+  if (ghost) {
+    var g2 = M.solve(ghost);
+    var dg = pathDA(g2.DA);
+    if (dg) gh.appendChild(el("path", { class:"ghost da", d:dg }));
+    if (isFinite(g2.Y)) gh.appendChild(el("circle", { class:"ghost-ring", cx:sx(g2.Y), cy:sy(g2.Y), r:4 }));
+  }
+  gh.setAttribute("opacity", ghost ? 1 : 0);
+
+  // reta de 45°: a condição de equilíbrio desenhada, não uma curva do modelo
+  cl.appendChild(el("line", { class:"line45", x1:sx(0), y1:sy(0), x2:sx(view.max), y2:sy(view.max) }));
+
+  var d = pathDA(eq.DA);
+  if (d) {
+    var g = el("g", { class:"grp", "data-curve":"DA", tabindex:"0", role:"img",
+      "aria-label":"Reta de demanda agregada. Arraste para cima ou para baixo para mudar o gasto do governo." });
+    g.appendChild(el("path", { class:"hit", d:d }));
+    g.appendChild(el("path", { class:"curve da", d:d }));
+    cl.appendChild(g);
+  }
+
+  if (eq.ok && isFinite(eq.Y) && eq.Y >= 0 && eq.Y <= view.max) {
+    var X = sx(eq.Y), Yp = sy(eq.Y);
+    mk.appendChild(el("line", { class:"guide", x1:X, y1:Yp, x2:X, y2:PLOT.y + PLOT.h }));
+    mk.appendChild(el("line", { class:"guide", x1:PLOT.x, y1:Yp, x2:X, y2:Yp }));
+    if (ghost) {
+      var g3 = M.solve(ghost);
+      if (isFinite(g3.Y) && Math.abs(sx(g3.Y) - X) > 7) {
+        var x1 = sx(g3.Y), y1 = sy(g3.Y), dx = X - x1, dy = Yp - y1, len = Math.hypot(dx, dy);
+        var ux = dx / len, uy = dy / len;
+        var eX = X - ux * 10, eY = Yp - uy * 10, k = 5;
+        mk.appendChild(el("line", { class:"arrow", x1:x1 + ux * 6, y1:y1 + uy * 6, x2:eX, y2:eY }));
+        mk.appendChild(el("polygon", { class:"arrow-head", points:[
+          eX + ux * k, eY + uy * k,
+          eX - uy * k * .6 - ux * k * .2, eY + ux * k * .6 - uy * k * .2,
+          eX + uy * k * .6 - ux * k * .2, eY - ux * k * .6 - uy * k * .2
+        ].map(function (v) { return v.toFixed(2); }).join(" ") }));
+      }
+    }
+    mk.appendChild(el("circle", { class:"ring", cx:X, cy:Yp, r:8 }));
+    mk.appendChild(el("circle", { class:"dot", cx:X, cy:Yp, r:2.5 }));
+    lb.appendChild(el("text", { class:"eqmark", x:X, y:PLOT.y + PLOT.h - 9, "text-anchor":"middle" }, fmt(eq.Y)));
+  }
+
+  // intercepto: o gasto autônomo, lido direto no eixo
+  if (eq.A >= 0 && eq.A <= view.max) {
+    lb.appendChild(el("text", { class:"eqmark", x:PLOT.x + 8, y:sy(eq.A) - 7, "text-anchor":"start" }, "A " + fmt(eq.A)));
+  }
+
+  // rótulos diretos na ponta de cada reta
+  lb.appendChild(el("text", { class:"clabel ref", x:sx(view.max) + 6, y:sy(view.max) + 13, "text-anchor":"end" }, "45°"));
+  var end = eq.DA.q + eq.DA.m * view.max;
+  if (end <= view.max) {
+    lb.appendChild(el("text", { class:"clabel da", x:VB.w - 6, y:Math.max(PLOT.y + 12, Math.min(PLOT.y + PLOT.h - 4, sy(end) + 4)), "text-anchor":"end" }, "DA"));
+  }
+}
+
+/* ═══ painéis ═══ */
+
+function renderResults(eq) {
+  $("outY").textContent = eq.ok ? fmt(eq.Y) : "—";
+  $("outM").textContent = eq.ok ? fmt(eq.mult, 2) : "—";
+  // C é realizado: C₀ é só o piso que não depende da renda
+  $("compo").innerHTML = [["C", eq.C], ["I", eq.I], ["G", eq.G]].map(function (x) {
+    return "<span><i>" + x[0] + "</i>" + fmt(x[1]) + "</span>";
+  }).join("");
+  $("dK").textContent = eq.ok ? "somam Y* = " + fmt(eq.Y) : "";
+  if (ghost && eq.ok) {
+    var g = M.solve(ghost);
+    $("dY").textContent = sign(eq.Y - g.Y) + " bi vs. antes";
+    $("dM").textContent = sign(eq.mult - g.mult, 2) + " vs. antes";
+  } else { $("dY").textContent = ""; $("dM").textContent = ""; }
+
+  var c2 = f2.format(state.c);
+
+  var c2 = f2.format(state.c);
+
+  $("eqs").innerHTML =
+    grupo("is", "DA", "mercado de bens", [
+      ["a reta", "DA = A + c \u00b7 Y", "DA = " + fmt(eq.A) + " + " + c2 + " \u00b7 Y", null],
+      ["produto", "Y = C + I + G", soma([eq.C, eq.I, eq.G], eq.Y), "R$ bi"],
+      ["consumo", "C = C\u2080 + c(Y \u2212 T)",
+        fmt(eq.C) + " = " + fmt(state.C0) + " + " +
+        vezes(c2, "(" + fmt(eq.Y) + " \u2212 " + fmt(state.T) + ")"), "R$ bi"],
+      ["renda dispon\u00edvel", "Yd = Y \u2212 T",
+        fmt(eq.Yd) + " = " + fmt(eq.Y) + " \u2212 " + fmt(state.T), "R$ bi"],
+      ["gasto aut\u00f4nomo", "A = C\u2080 \u2212 cT + I\u2080 + G",
+        fmt(eq.A) + " = " + fmt(state.C0) + " \u2212 " + vezes(c2, fmt(state.T)) +
+        " + " + fmt(state.I0) + " + " + fmt(state.G), "R$ bi"]
+    ]) +
+    '<div class="eqcol">' +
+      grupo("", "Equil\u00edbrio", "onde a demanda encontra o produto", [
+        ["produto", "Y* = A / (1 \u2212 c)",
+          fmt(eq.Y) + " = " + fmt(eq.A) + " / (1 \u2212 " + c2 + ")", "R$ bi"],
+        ["poupan\u00e7a", "S + (T \u2212 G) = I",
+          fmt(eq.S) + (eq.Spub < 0 ? " \u2212 " : " + ") + fmt(Math.abs(eq.Spub)) +
+          " = " + fmt(eq.I), "R$ bi"]
+      ]) +
+      grupo("", "Multiplicadores", "quanto cada real vira de produto", [
+        ["do gasto", "\u0394Y/\u0394A = 1 / (1 \u2212 c)",
+          f2.format(eq.mult) + "\u00d7 = 1 / (1 \u2212 " + c2 + ")", "nada o freia aqui"],
+        ["do tributo", "\u0394Y/\u0394T = \u2212c / (1 \u2212 c)",
+          fmt(eq.multT, 2) + "\u00d7 = \u2212" + c2 + " / (1 \u2212 " + c2 + ")", null]
+      ]) +
+    "</div>";
+}
+
+function renderAlert(eq) {
+  var msg = null;
+  if (!eq.ok) {
+    msg = "Com c = 1 as famílias gastam cada real a mais que recebem, o multiplicador não converge e o modelo não determina um produto de equilíbrio.";
+  } else if (eq.Y < 0) {
+    msg = "Produto de equilíbrio negativo. Essa combinação não descreve uma economia possível — reduza os tributos ou eleve os gastos autônomos.";
+  } else if (state.c >= 0.85) {
+    msg = "Propensão a consumir muito alta: o multiplicador passa de 6. Nenhuma economia real poupa tão pouco, e o modelo fica sensível demais a qualquer choque.";
+  }
+  $("alert").classList.toggle("on", !!msg);
+  $("alertTxt").textContent = msg || "";
+}
+
+function renderChain() {
+  var host = $("chain");
+  host.textContent = "";
+  if (!lastMove) {
+    var d = document.createElement("p");
+    d.className = "chain-idle";
+    d.textContent = "Mexa em qualquer controle para ver a cadeia de causa e efeito que ele dispara.";
+    host.appendChild(d);
+    return;
+  }
+  var p = P_BY_ID[lastMove.id], flip = lastMove.dir < 0 ? -1 : 1;
+  function chip(cls, html) {
+    var n = document.createElement("div");
+    n.className = "step " + cls;
+    n.innerHTML = html;
+    host.appendChild(n);
+  }
+  chip("head", "<em>" + (flip > 0 ? "↑" : "↓") + "</em>" + term("p:" + p.id, p.sym));
+  (CHAINS[lastMove.id] || []).forEach(function (st) {
+    var txt = st.term ? term(st.term, st.t) : st.t;
+    if (st.shiftV) chip("is", txt + " <em>" + (st.d * flip > 0 ? "↑" : "↓") + "</em>");
+    else if (st.rot) chip("is", txt + " (mais " + ((flip > 0 ? st.flat : !st.flat) ? "deitada" : "inclinada") + ")");
+    else chip(st.curve ? "is" : "", st.d === 0 ? txt : txt + " <em>" + (st.d * flip > 0 ? "↑" : "↓") + "</em>");
+  });
+}
+
+/* As rodadas do multiplicador: de onde vem o 1/(1−c). */
+function renderRounds(eq) {
+  var IMP = 100, N = 5;
+  var r = M.rodadas(state.c, IMP, N);
+  var host = $("rounds");
+  host.innerHTML = "";
+  var maior = r.rodadas[0].v;
+
+  function linha(cls, rot, valor, largura) {
+    var d = document.createElement("div");
+    d.className = "round " + cls;
+    d.innerHTML = '<span class="round-l">' + rot + "</span>" +
+      '<span><span class="round-bar" style="width:' + Math.max(0.6, largura * 100).toFixed(1) + '%"></span></span>' +
+      '<span class="round-v">' + valor + "</span>";
+    host.appendChild(d);
+  }
+  r.rodadas.forEach(function (x) {
+    linha("", "rodada " + x.i, "R$ " + fmt(x.v, x.v < 10 ? 2 : 0), x.v / maior);
+  });
+  linha("rest", "demais", "R$ " + fmt(r.resto, r.resto < 10 ? 2 : 0), r.resto / maior);
+  linha("total", "total", "R$ " + fmt(r.total), 1);
+
+  $("roundsCap").innerHTML = "Um gasto novo de R$&nbsp;100 vira renda de alguém, que gasta " +
+    f0.format(state.c * 100) + "&nbsp;% disso, e assim por diante. É daí que sai o " +
+    term("multiplicador", "multiplicador") + " de " + f2.format(eq.mult) + "×:";
+}
+
+function syncControls() {
+  PARAMS.forEach(function (p) {
+    var input = $("in-" + p.id);
+    if (!input) return;
+    var v = state[p.id];
+    if (Number(input.value) !== v) input.value = v;
+    input.style.setProperty("--pct", ((v - p.min) / (p.max - p.min) * 100).toFixed(2) + "%");
+    var campo = $("val-" + p.id);
+    // nao sobrescreve enquanto o usuario esta digitando naquele campo
+    if (document.activeElement !== campo) {
+      campo.value = nf(p.dec || 0).format(v);
+      // o valor derivado pode passar do maximo do slider (M sob meta de juros
+      // chega a quatro digitos): o campo cresce para nao cortar o numero
+      campo.style.width = Math.max(larguraCh(p), campo.value.length + 1.5) + "ch";
+    }
+    input.setAttribute("aria-valuetext", p.label + " " + fmtP(p, v));
+    $("eff-" + p.id).textContent = p.eff;
+  });
+}
+
+/* ═══ render ═══ */
+var raf = null;
+function render() {
+  if (raf) return;
+  raf = requestAnimationFrame(function () {
+    raf = null;
+    var eq = M.solve(state);
+    fitView(eq);
+    draw(eq);
+    renderResults(eq);
+    renderAlert(eq);
+    renderChain();
+    renderRounds(eq);
+    syncControls();
+  });
+}
+
+/* ═══ construção ═══ */
+
+function buildPanel() {
+  var html = "";
+  GROUPS.forEach(function (g) {
+    html += '<h3 class="group-title">' + g.title + "</h3>";
+    g.ids.forEach(function (id) {
+      var p = P_BY_ID[id];
+      html += '<div class="ctrl" id="row-' + id + '" data-curve="IS">' +
+        '<div class="ctrl-head">' +
+          '<span class="ctrl-name">' + term("p:" + id, p.label) + ' <span class="term-sym">(' + p.sym + ")</span></span>" +
+          '<span class="ctrl-val">' +
+            (p.u.pre ? "<u>" + p.u.pre + "</u>" : "") +
+            '<input type="text" inputmode="decimal" class="valin" id="val-' + id + '"' +
+              ' style="width:' + larguraCh(p) + 'ch" aria-label="' + p.label + ', digite um valor">' +
+            (p.u.suf ? "<u>" + p.u.suf + "</u>" : "") +
+          "</span>" +
+        "</div>" +
+        '<input type="range" id="in-' + id + '" min="' + p.min + '" max="' + p.max + '" step="' + p.step +
+          '" value="' + p.base + '" aria-label="' + p.label + '">' +
+        '<p class="ctrl-eff" id="eff-' + id + '"></p>' +
+      "</div>";
+    });
+  });
+  $("painel").innerHTML = html;
+
+  PARAMS.forEach(function (p) {
+    var input = $("in-" + p.id);
+    input.addEventListener("pointerdown", beginGesture);
+    input.addEventListener("keydown", function (ev) {
+      if (ev.key.indexOf("Arrow") !== 0) return;
+      beginGesture();
+      if (ev.shiftKey) {
+        ev.preventDefault();
+        var d = (ev.key === "ArrowRight" || ev.key === "ArrowUp") ? 1 : -1;
+        setParam(p.id, clampP(p, state[p.id] + d * p.step * 10));
+      }
+    });
+    input.addEventListener("dblclick", function () { beginGesture(); setParam(p.id, p.base); });
+    input.addEventListener("input", function () { setParam(p.id, Number(input.value)); });
+    ligarCampo(p);
+  });
+}
+
+/* ═══ VALOR DIGITAVEL ═══ */
+
+/* Largura do campo: cabe o maior numero da faixa, com folga para o caso em
+   que o valor e derivado e passa do maximo do slider. */
+function larguraCh(pa) {
+  var d = pa.dec || 0;
+  var a = nf(d).format(pa.min).length, b = nf(d).format(pa.max).length;
+  return Math.max(4.5, Math.max(a, b) + 1.5);
+}
+
+/* Aceita 1.234,5 / 1234,5 / 1234.5 / "R$ 450 bi". A virgula sempre e decimal;
+   o ponto so e decimal se o parametro tiver casas, senao e separador de milhar. */
+function parseNum(txt, pa) {
+  var s = String(txt).replace(/\u2212/g, "-").replace(/[^\d.,\-]/g, "");
+  if (s.indexOf(",") >= 0) s = s.replace(/\./g, "").replace(",", ".");
+  else if (!pa.dec) s = s.replace(/\./g, "");
+  var v = parseFloat(s);
+  return isFinite(v) ? v : NaN;
+}
+
+function commitVal(pa) {
+  var campo = $("val-" + pa.id);
+  var v = parseNum(campo.value, pa);
+  if (!isFinite(v)) { render(); return; }              // lixo digitado: volta ao valor atual
+  var lim = Math.max(pa.min, Math.min(pa.max, v));
+  if (Math.abs(lim - v) > 1e-9) {                      // estourou a faixa: avisa e limita
+    campo.classList.remove("limite");
+    void campo.offsetWidth;
+    campo.classList.add("limite");
+  }
+  beginGesture();
+  setParam(pa.id, lim);
+  endGesture();
+  render();
+}
+
+function ligarCampo(pa) {
+  var campo = $("val-" + pa.id);
+  campo.addEventListener("focus", function () { campo.select(); });
+  // a classe do pisca sai sozinha, para nao ficar presa no DOM
+  campo.addEventListener("animationend", function () { campo.classList.remove("limite"); });
+  campo.addEventListener("keydown", function (ev) {
+    if (ev.key === "Enter") { ev.preventDefault(); campo.blur(); }
+    else if (ev.key === "Escape") { ev.preventDefault(); campo.dataset.esc = "1"; campo.blur(); }
+  });
+  campo.addEventListener("blur", function () {
+    if (campo.dataset.esc) { delete campo.dataset.esc; render(); return; }
+    commitVal(pa);
+  });
+}
+
+function clampP(p, v) { return Math.max(p.min, Math.min(p.max, Math.round(v / p.step) * p.step)); }
+
+function commitPending() {
+  if (!pendingTarget) return;
+  var t = pendingTarget;
+  pendingTarget = null;
+  PARAMS.forEach(function (p) { state[p.id] = t[p.id]; });
+}
+/* A referência FICA quando vale a pena comparar: contra a economia base, ou
+   contra o estado logo antes de você mexer num controle. Ao pular de um
+   cenário direto para outro sem relação, ela aparece por 3 s e some. */
+var ghostTimer = null;
+function fadeGhost(ms) {
+  clearTimeout(ghostTimer);
+  ghostTimer = setTimeout(function () { ghost = null; render(); }, ms);
+}
+function holdGhost() { clearTimeout(ghostTimer); }
+
+/* A referência fica na tela até o próximo movimento: ela mostra onde a
+   economia estava ANTES da sua última ação, e some sozinha só quando é
+   substituída. Some por tempo seria pior — o aluno olha para o controle
+   enquanto arrasta e perde a comparação justamente quando volta ao gráfico. */
+function beginGesture() {
+  commitPending();
+  animId++;
+  holdGhost();                    // mexer num controle fixa a referência
+  if (dragBase) { if (!ghost) ghost = dragBase; return; }
+  dragBase = Object.assign({}, state);
+  ghost = dragBase;
+}
+function endGesture() { dragBase = null; }
+window.addEventListener("pointerup", endGesture);
+window.addEventListener("keyup", function (ev) { if (ev.key.indexOf("Arrow") === 0) endGesture(); });
+
+function setParam(id, value) {
+  var p = P_BY_ID[id];
+  var v = Math.max(p.min, Math.min(p.max, value));
+  if (Math.abs(v - state[id]) < 1e-12) return;
+  commitPending();
+  animId++;
+  lastMove = { id:id, dir: v >= (dragBase || state)[id] ? 1 : -1 };
+  state[id] = v;
+  activeScenario = null;          // o cenário segue carregado, só não está mais intacto
+  markScenario();
+  render();
+}
+
+/* ═══ cenários ═══ */
+
+function buildScenarios() {
+  var html = "", sec = null;
+  SCENARIOS.forEach(function (sc) {
+    if (sc.section !== sec) { sec = sc.section; html += '<div class="menu-sec">' + sec + "</div>"; }
+    html += '<button type="button" class="menu-item" role="menuitemradio" data-id="' + sc.id + '"' +
+      ' aria-checked="' + (sc.id === "base") + '">' +
+      '<span class="mi-n">' + sc.name + '</span><span class="mi-d">' + sc.story + "</span></button>";
+  });
+  $("scenMenu").innerHTML = html;
+
+  Array.prototype.forEach.call($("scenMenu").querySelectorAll(".menu-item"), function (b) {
+    b.addEventListener("click", function () {
+      var sc = SCENARIOS.filter(function (s) { return s.id === b.dataset.id; })[0];
+      closeMenu(true);
+      applyScenario(sc);
+    });
+  });
+  $("scenBtn").addEventListener("click", function (ev) {
+    ev.stopPropagation();
+    if ($("scenMenu").hidden) openMenu(); else closeMenu(true);
+  });
+  document.addEventListener("click", function (ev) {
+    if (!$("scenMenu").hidden && !ev.target.closest(".menu-wrap")) closeMenu(false);
+  });
+  document.addEventListener("keydown", function (ev) {
+    if ($("scenMenu").hidden) return;
+    var items = Array.prototype.slice.call($("scenMenu").querySelectorAll(".menu-item"));
+    var i = items.indexOf(document.activeElement);
+    if (ev.key === "Escape") { ev.preventDefault(); closeMenu(true); }
+    else if (ev.key === "ArrowDown") { ev.preventDefault(); items[(i + 1) % items.length].focus(); }
+    else if (ev.key === "ArrowUp") { ev.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); }
+  });
+}
+function openMenu() {
+  $("scenMenu").hidden = false;
+  $("scenBtn").setAttribute("aria-expanded", "true");
+  var f = $("scenMenu").querySelector('.menu-item[aria-checked="true"]') || $("scenMenu").querySelector(".menu-item");
+  if (f) f.focus();
+}
+function closeMenu(refocus) {
+  $("scenMenu").hidden = true;
+  $("scenBtn").setAttribute("aria-expanded", "false");
+  if (refocus) $("scenBtn").focus();
+}
+function markScenario() {
+  // O cenário carregado continua na tela mesmo depois de você mexer nos
+  // controles. Some nada, move nada: o que muda é a etiqueta de status.
+  var sc = SCENARIOS.filter(function (s) { return s.id === loadedScenario; })[0];
+  if (!sc) return;
+  $("scenNow").textContent = sc.name;
+  $("modChip").dataset.on = activeScenario ? "nao" : "sim";
+  $("briefStory").textContent = sc.story;
+  $("briefWatch").textContent = sc.watch;
+  Array.prototype.forEach.call($("scenMenu").querySelectorAll(".menu-item"), function (b) {
+    b.setAttribute("aria-checked", b.dataset.id === loadedScenario ? "true" : "false");
+  });
+}
+
+/* `limpo` = veio do botão Reiniciar: começa do zero, sem referência na tela.
+   Um cenário escolhido no menu mantém a referência, porque ali comparar com o
+   estado anterior é o ponto. */
+function applyScenario(sc, limpo) {
+  // sai da base (ou do Reiniciar) => a comparação vale e a referência fica;
+  // pula de um cenário para outro => ela some depois de 3 s
+  var vinhaDaBase = loadedScenario === "base";
+  holdGhost();
+  ghost = limpo ? null : Object.assign({}, state);
+  var someDepois = !limpo && !vinhaDaBase;
+  dragBase = null;
+  resetView();
+  var target = M.baseState();
+  for (var k in sc.set) target[k] = sc.set[k];
+  activeScenario = loadedScenario = sc.id;
+  lastMove = null;
+  markScenario();
+
+  var from = Object.assign({}, state);
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    pendingTarget = null; state = target; render(); if (someDepois) fadeGhost(3000); return;
+  }
+  pendingTarget = target;
+  var my = ++animId, t0 = performance.now(), DUR = 460;
+  (function step(now) {
+    if (my !== animId) return;
+    var u = Math.min(1, (now - t0) / DUR);
+    var e = u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+    PARAMS.forEach(function (p) { state[p.id] = from[p.id] + (target[p.id] - from[p.id]) * e; });
+    render();
+    if (u < 1) requestAnimationFrame(step);
+    else { pendingTarget = null; state = target; render(); if (someDepois) fadeGhost(3000); }
+  })(performance.now());
+}
+
+/* ═══ definição em contexto ═══ */
+
+var pinned = null;
+function showPop(btn) {
+  var t = TERMS[btn.dataset.term];
+  if (!t) return;
+  var pop = $("pop");
+  $("popT").textContent = t.t;
+  $("popU").textContent = t.u ? "unidade: " + t.u : "";
+  $("popU").hidden = !t.u;
+  $("popD").textContent = t.d;
+  var p = t.param ? P_BY_ID[t.param] : null;
+  $("popE").textContent = p ? p.eff : "";
+  $("popE").hidden = !p;
+  pop.hidden = false;
+  var r = btn.getBoundingClientRect(), w = pop.offsetWidth, h = pop.offsetHeight;
+  pop.style.left = Math.min(Math.max(10, r.left + r.width / 2 - w / 2), window.innerWidth - w - 10) + "px";
+  var top = r.top - h - 9;
+  if (top < 10) top = Math.min(r.bottom + 9, window.innerHeight - h - 10);
+  pop.style.top = Math.max(10, top) + "px";
+  btn.setAttribute("aria-expanded", "true");
+  btn.setAttribute("aria-describedby", "pop");
+}
+function hidePop() {
+  $("pop").hidden = true;
+  Array.prototype.forEach.call(document.querySelectorAll(".term[aria-expanded='true']"), function (b) {
+    b.setAttribute("aria-expanded", "false");
+    b.removeAttribute("aria-describedby");
+  });
+  pinned = null;
+}
+function setupTerms() {
+  document.addEventListener("pointerover", function (ev) {
+    var b = ev.target.closest && ev.target.closest(".term");
+    if (b && !pinned) showPop(b);
+  });
+  document.addEventListener("pointerout", function (ev) {
+    var b = ev.target.closest && ev.target.closest(".term");
+    if (b && !pinned) hidePop();
+  });
+  document.addEventListener("focusin", function (ev) {
+    var b = ev.target.closest && ev.target.closest(".term");
+    if (b) showPop(b);
+  });
+  document.addEventListener("focusout", function (ev) {
+    var b = ev.target.closest && ev.target.closest(".term");
+    if (b && !pinned) hidePop();
+  });
+  document.addEventListener("click", function (ev) {
+    var b = ev.target.closest && ev.target.closest(".term");
+    if (b) {
+      ev.preventDefault();
+      if (pinned === b) hidePop();
+      else { pinned = null; showPop(b); pinned = b; }
+      return;
+    }
+    if (pinned && !ev.target.closest(".pop")) hidePop();
+  });
+  document.addEventListener("keydown", function (ev) { if (ev.key === "Escape" && !$("pop").hidden) hidePop(); });
+  window.addEventListener("scroll", function () { if (!pinned) hidePop(); }, true);
+}
+
+/* ═══ arraste da reta DA ═══ */
+/* Empurrar a reta na VERTICAL muda o gasto do governo, porque um deslocamento
+   de ΔDA é exatamente um ΔG. O ponto de equilíbrio não é arrastável. */
+
+function setupDrag() {
+  var svg = $("chart"), drag = null;
+  function toModel(ev) {
+    var r = svg.getBoundingClientRect();
+    if (!r.width) return null;
+    var px = (ev.clientX - r.left) / r.width * VB.w;
+    var py = (ev.clientY - r.top) / r.height * VB.h;
+    return { Y:ix(px), DA:(1 - (py - PLOT.y) / PLOT.h) * view.max };
+  }
+  svg.addEventListener("pointerdown", function (ev) {
+    var g = ev.target.closest && ev.target.closest(".grp");
+    if (!g) return;
+    var pt = toModel(ev);
+    if (!pt) return;
+    beginGesture();
+    drag = { DA0:pt.DA, G0:state.G };
+    svg.setPointerCapture(ev.pointerId);
+    ev.preventDefault();
+  });
+  svg.addEventListener("pointermove", function (ev) {
+    if (!drag) return;
+    var pt = toModel(ev);
+    if (pt) setParam("G", clampP(P_BY_ID.G, drag.G0 + (pt.DA - drag.DA0)));
+  });
+  svg.addEventListener("pointerup", function (ev) {
+    if (drag) { try { svg.releasePointerCapture(ev.pointerId); } catch (e) {} }
+    drag = null;
+    endGesture();
+  });
+}
+
+/* ═══ partida ═══ */
+
+$("labY").innerHTML = term("equilibrio-renda", "Produto de equilíbrio · Y*");
+$("labM").innerHTML = term("multiplicador", "Multiplicador · 1/(1−c)");
+$("labK").innerHTML = term("demanda-agregada", "Composição da demanda");
+
+buildPanel();
+buildScenarios();
+markScenario();
+setupDrag();
+setupTerms();
+$("resetBtn").addEventListener("click", function () { applyScenario(SCENARIOS[0], true); });
+render();
+</script>
+</body>
+</html>

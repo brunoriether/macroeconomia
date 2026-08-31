@@ -1,0 +1,504 @@
+/* ─────────────────────────────────────────────────────────────
+   BÚSSOLA MACRO — base compartilhada pelas três telas
+   (escolha, simplificado, intermediário) e pelo glossário.
+
+   Tema único escuro, por escolha. Grafite azulado e exatamente
+   duas matizes, com o mesmo significado nos dois modelos:
+     azul   = mercado de bens  (curva DA no simples, curva IS no intermediário)
+     sienna = mercado de moeda (curva LM, só no intermediário)
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  color-scheme: dark;
+  --bg:      #0E1013;
+  --panel:   #14171B;
+  --panel-2: #191D22;
+  --ink:     #E8EAEC;
+  --ink-2:   #A3AAB1;
+  --ink-3:   #79828A;
+  --rule:    #23282E;
+  --rule-2:  #1B1F24;
+  --track:   #2E353C;
+
+  --is:      #4a8ade;
+  --lm:      #d9682f;
+  --is-soft: rgba(74,138,222,.30);
+  --lm-soft: rgba(217,104,47,.30);
+  --is-wash: rgba(74,138,222,.10);
+  --lm-wash: rgba(217,104,47,.10);
+
+  --sans:  'Archivo', 'Helvetica Neue', Arial, sans-serif;
+  --mono:  'IBM Plex Mono', ui-monospace, Consolas, monospace;
+  --serif: 'Newsreader', Georgia, serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--sans); font-size: 15px; line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.wrap { max-width: 1280px; margin: 0 auto; padding: 0 clamp(16px, 3.5vw, 36px); }
+h1, h2 { text-wrap: balance; }
+
+/* ── cabeçalho ────────────────────────────────────────────── */
+
+.top {
+  display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
+  gap: 16px; padding: clamp(24px, 4.5vw, 40px) 0 18px;
+}
+.top h1 { margin: 0; font-size: clamp(26px, 4.4vw, 36px); font-weight: 500; letter-spacing: -0.02em; line-height: 1.05; }
+.top h1 b { font-weight: 700; }
+.top p { margin: 8px 0 0; max-width: 58ch; font-family: var(--serif); font-size: 15.5px; line-height: 1.45; color: var(--ink-2); }
+
+/* ── botões ───────────────────────────────────────────────── */
+
+.btn {
+  appearance: none; background: transparent;
+  border: 1px solid var(--rule); color: var(--ink-2);
+  font-family: var(--sans); font-size: 11.5px; font-weight: 600;
+  letter-spacing: .06em; text-transform: uppercase;
+  padding: 8px 13px; cursor: pointer; white-space: nowrap;
+}
+.btn:hover { color: var(--ink); border-color: var(--ink-3); }
+.btn b { font-weight: 700; color: var(--ink); text-transform: none; letter-spacing: 0; font-size: 12.5px; }
+.btn .caret { color: var(--ink-3); margin-left: 4px; }
+a.btn { text-decoration: none; display: inline-block; }
+
+/* ── grade ────────────────────────────────────────────────── */
+
+.app { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 32px; padding-bottom: 24px; }
+.col-ctrl, .col-out { min-width: 0; }
+
+/* ── abas ─────────────────────────────────────────────────── */
+
+.tabs { display: flex; border-bottom: 1px solid var(--rule); }
+.tab {
+  flex: 1; appearance: none; background: transparent; border: 0;
+  border-bottom: 2px solid transparent; padding: 11px 12px 9px;
+  text-align: left; cursor: pointer; color: var(--ink-3); font-family: var(--sans);
+}
+.tab .tag-c { display: block; font-size: 15px; font-weight: 700; letter-spacing: .04em; line-height: 1.1; }
+.tab .tag-s { display: block; font-size: 11px; font-weight: 500; margin-top: 3px; }
+.tab:hover { color: var(--ink-2); }
+.tab[aria-selected="true"] { color: var(--ink); }
+.tab[data-tab="IS"][aria-selected="true"] { border-bottom-color: var(--is); background: var(--is-wash); }
+.tab[data-tab="IS"][aria-selected="true"] .tag-c { color: var(--is); }
+.tab[data-tab="LM"][aria-selected="true"] { border-bottom-color: var(--lm); background: var(--lm-wash); }
+.tab[data-tab="LM"][aria-selected="true"] .tag-c { color: var(--lm); }
+
+.group-title {
+  display: flex; align-items: center; gap: 10px; margin: 20px 0 2px;
+  font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3);
+}
+.group-title::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+
+/* ── controle ─────────────────────────────────────────────── */
+
+.ctrl { padding: 11px 0 12px; }
+.ctrl + .ctrl { border-top: 1px solid var(--rule-2); }
+.ctrl-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+/* O valor e editavel: clicar no numero abre um campo. A unidade fica FORA
+   dele, para o usuario digitar so o numero e nao ter de apagar "R$" e "bi". */
+.ctrl-val {
+  display: inline-flex; align-items: baseline; white-space: nowrap;
+  font-family: var(--mono); font-size: 13px; font-variant-numeric: tabular-nums;
+}
+.ctrl-val u { font-style: normal; text-decoration: none; color: var(--ink-3); }
+.valin {
+  appearance: none; background: transparent; border: 0;
+  border-bottom: 1px dotted var(--rule);
+  color: var(--ink); font: inherit; font-variant-numeric: tabular-nums;
+  text-align: right; padding: 1px 2px; margin: 0; cursor: text;
+}
+.valin:hover { border-bottom-color: var(--ink-3); }
+.valin:focus { outline: none; background: var(--panel); border-bottom: 1px solid var(--fill, var(--ink)); }
+.valin:disabled { border-bottom-color: transparent; color: var(--ink-3); cursor: default; }
+/* pisca quando o valor digitado estoura a faixa e e trazido para o limite */
+.valin.limite { animation: limite 700ms ease-out; }
+@keyframes limite { 0%, 55% { color: var(--lm); } 100% { color: var(--ink); } }
+
+input[type="range"] {
+  appearance: none; -webkit-appearance: none; display: block;
+  width: 100%; height: 18px; margin: 7px 0 0; background: transparent; cursor: ew-resize;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 2px; border: 0;
+  background: linear-gradient(to right, var(--fill) 0 var(--pct, 0%), var(--track) var(--pct, 0%) 100%);
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 13px; height: 13px; margin-top: -5.5px;
+  border-radius: 0; background: var(--fill); border: 2px solid var(--bg);
+}
+input[type="range"]::-moz-range-track { height: 2px; border: 0; background: var(--track); }
+input[type="range"]::-moz-range-progress { height: 2px; background: var(--fill); }
+input[type="range"]::-moz-range-thumb { width: 9px; height: 9px; border-radius: 0; background: var(--fill); border: 2px solid var(--bg); }
+input[type="range"]:focus-visible { outline: 2px solid var(--fill); outline-offset: 4px; }
+.ctrl[data-curve="IS"] input { --fill: var(--is); }
+.ctrl[data-curve="LM"] input { --fill: var(--lm); }
+
+.ctrl-eff { margin: 7px 0 0; font-family: var(--serif); font-style: italic; font-size: 13px; line-height: 1.4; color: var(--ink-3); }
+
+.ctrl.locked input { cursor: default; }
+.ctrl.locked input::-webkit-slider-thumb { background: var(--bg); border-color: var(--ink-3); }
+.ctrl.locked input::-moz-range-thumb { background: var(--bg); border-color: var(--ink-3); }
+.ctrl.locked .ctrl-name, .ctrl.locked .ctrl-eff { color: var(--ink-3); }
+.chip-res {
+  display: none; font-size: 8.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--bg); background: var(--ink-3); padding: 2px 5px; margin-left: 6px; vertical-align: 1.5px;
+}
+.ctrl.locked .chip-res { display: inline-block; }
+
+/* ── termo com definição em contexto ──────────────────────── */
+
+/* O texto fica limpo: só o ⓘ abre a definição. O botão leva padding para
+   virar um alvo clicável decente, e margem negativa para que esse alvo maior
+   não empurre o texto ao redor. Padding vertical em elemento inline não
+   aumenta a altura da linha, então nada se desloca. */
+.term {
+  appearance: none; background: none; border: 0;
+  padding: 5px 6px; margin: -5px -4px;
+  font: inherit; font-size: .84em; line-height: 1;
+  color: var(--ink-3); cursor: help; vertical-align: baseline;
+}
+.term:hover, .term:focus-visible, .term[aria-expanded="true"] { color: var(--ink); }
+.ctrl-name { font-size: 13px; font-weight: 600; line-height: 1.25; }
+.term-sym { font-weight: 500; color: var(--ink-3); }
+
+.pop {
+  position: fixed; z-index: 60; width: min(330px, calc(100vw - 24px));
+  background: var(--panel-2); border: 1px solid var(--rule);
+  padding: 13px 15px 15px; box-shadow: 0 14px 36px rgba(0,0,0,.6);
+}
+.pop[hidden] { display: none; }
+.pop-t { display: block; font-size: 13px; font-weight: 700; }
+.pop-u { display: block; font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); margin-top: 3px; }
+.pop-d { margin: 8px 0 0; font-family: var(--serif); font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+.pop-e { margin: 7px 0 0; font-family: var(--serif); font-style: italic; font-size: 13.5px; line-height: 1.45; color: var(--ink-3); }
+
+/* ── regime ───────────────────────────────────────────────── */
+
+.regime { padding: 14px 0 4px; }
+.regime-q { margin: 0 0 8px; font-family: var(--serif); font-size: 13.5px; color: var(--ink-2); }
+.regime-sw { display: flex; border: 1px solid var(--rule); }
+.regime-sw button {
+  flex: 1; appearance: none; background: transparent;
+  border: 0; border-right: 1px solid var(--rule); border-bottom: 2px solid transparent;
+  color: var(--ink-2); font-family: var(--sans); font-size: 12px; font-weight: 500; line-height: 1.3;
+  padding: 9px 8px; cursor: pointer;
+}
+.regime-sw button:last-child { border-right: 0; }
+.regime-sw button:hover { color: var(--ink); }
+.regime-sw button[aria-pressed="true"] { background: var(--ink); color: var(--bg); font-weight: 600; border-bottom-color: var(--lm); }
+
+/* ── barra de ferramentas ─────────────────────────────────── */
+
+.toolbar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding-bottom: 12px;
+}
+.toolbar .spacer { flex: 1; }
+/* Ocupa lugar mesmo escondida: aparecer não pode empurrar nada. */
+.mod {
+  font-size: 9px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--bg); background: var(--ink-3); padding: 3px 7px; white-space: nowrap;
+}
+.mod[data-on="nao"] { visibility: hidden; }
+.menu-wrap { position: relative; }
+.menu {
+  position: absolute; z-index: 40; top: calc(100% + 6px); left: 0;
+  width: min(420px, calc(100vw - 32px));
+  background: var(--panel-2); border: 1px solid var(--rule);
+  box-shadow: 0 14px 36px rgba(0,0,0,.6);
+  max-height: min(76vh, 620px); overflow-y: auto;
+}
+.menu[hidden] { display: none; }
+.menu-item {
+  display: block; width: 100%; text-align: left;
+  appearance: none; background: transparent; border: 0;
+  border-bottom: 1px solid var(--rule-2);
+  padding: 11px 15px 12px; cursor: pointer; font-family: var(--sans);
+}
+.menu-item:last-child { border-bottom: 0; }
+.menu-item:hover, .menu-item:focus-visible { background: var(--panel); }
+.menu-item[aria-checked="true"] { box-shadow: inset 3px 0 0 var(--ink); }
+.menu-item .mi-n { display: block; font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.menu-item .mi-d { display: block; margin-top: 3px; font-family: var(--serif); font-size: 13px; line-height: 1.4; color: var(--ink-3); }
+.menu-sec {
+  padding: 10px 15px 6px; font-size: 9.5px; font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3);
+  border-bottom: 1px solid var(--rule-2);
+}
+
+/* ── briefing do cenário ──────────────────────────────────── */
+/* Aparece ao aplicar um cenário e some assim que o usuário mexe num
+   controle: a história vale enquanto ela ainda descreve o que está na tela. */
+.briefing {
+  border-left: 2px solid var(--ink-3);
+  padding: 2px 0 2px 14px;
+  margin: 0 0 14px;
+}
+.briefing[hidden] { display: none; }
+.brief-story {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 15.5px;
+  line-height: 1.45;
+  color: var(--ink);
+  max-width: 72ch;
+}
+
+/* "O que observar" é guia de leitura do gráfico, então mora colado nele:
+   uma faixa no rodapé do próprio quadro, e não um bloco solto antes. */
+.watch {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  border-top: 1px solid var(--rule);
+  padding: 11px 15px 13px;
+  font-family: var(--serif);
+  font-size: 14.5px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.watch[hidden] { display: none; }
+.watch .brief-tag { flex: none; }
+.brief-tag {
+  display: inline-block;
+  margin-right: 8px;
+  font-family: var(--sans);
+  font-size: 9.5px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--bg); background: var(--ink-3);
+  padding: 2px 6px; vertical-align: 2px;
+}
+
+/* ── gráfico e resultado ──────────────────────────────────── */
+
+.plate { background: var(--panel); border: 1px solid var(--rule); }
+.plate svg { display: block; width: 100%; height: auto; touch-action: none; }
+
+.results { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1px; background: var(--rule); margin-top: 1px; }
+
+/* A composição da demanda fica ao lado dos dois números grandes porque é a
+   ela que quase todo cenário se refere — e porque C e I são valores
+   REALIZADOS, que ninguém acha olhando os controles de C₀ e I₀. */
+.compo { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px 18px; }
+.compo span {
+  font-family: var(--mono); font-size: 16px; white-space: nowrap;
+  font-variant-numeric: tabular-nums; color: var(--ink);
+}
+.compo i { font-style: normal; color: var(--ink-3); margin-right: 6px; }
+.result { background: var(--panel); padding: 15px 18px 17px; }
+.result-label { font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); }
+.result-val {
+  margin-top: 7px; font-family: var(--mono); font-size: clamp(26px, 3.4vw, 36px);
+  line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+}
+.result-val u { font-style: normal; text-decoration: none; font-size: .42em; color: var(--ink-3); }
+.result-delta { margin-top: 7px; font-family: var(--mono); font-size: 11px; color: var(--ink-2); min-height: 1.3em; font-variant-numeric: tabular-nums; }
+
+.alert {
+  display: none; gap: 12px; margin: 16px 0 0;
+  font-family: var(--serif); font-size: 14.5px; line-height: 1.5; color: var(--ink-2);
+}
+.alert.on { display: flex; }
+.alert::before { content: ""; flex: none; width: 2px; background: var(--lm); }
+
+/* ── forças ───────────────────────────────────────────────── */
+
+.forces { margin-top: 26px; }
+.eyebrow {
+  display: flex; align-items: center; gap: 10px; margin: 0 0 12px;
+  font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3);
+}
+.eyebrow::after { content: ""; flex: 1; height: 1px; background: var(--rule); }
+
+.chain { display: flex; flex-wrap: wrap; gap: 6px; }
+.step {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 10px; border: 1px solid var(--rule);
+  font-size: 12.5px; color: var(--ink-2); white-space: nowrap;
+}
+.step.head { border-color: var(--ink-3); color: var(--ink); font-weight: 600; }
+.step.is { border-color: var(--is); color: var(--is); font-weight: 600; }
+.step.lm { border-color: var(--lm); color: var(--lm); font-weight: 600; }
+.step em { font-family: var(--mono); font-style: normal; font-size: 13px; }
+.step .term { color: inherit; opacity: .75; }
+.chain-idle { margin: 0; font-family: var(--serif); font-size: 14px; color: var(--ink-3); }
+
+.meter-block { margin-top: 20px; }
+.meter-cap { margin: 0 0 9px; font-family: var(--serif); font-size: 14px; color: var(--ink-2); }
+.meter { display: flex; height: 8px; gap: 2px; }
+.meter-a { background: var(--is); }
+.meter-b { background: var(--lm); }
+.meter-key {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; margin-top: 9px;
+  font-family: var(--mono); font-size: 11.5px; color: var(--ink-2); font-variant-numeric: tabular-nums;
+}
+.meter-key b { font-weight: 500; color: var(--ink); }
+.meter-key span { display: inline-flex; align-items: center; gap: 7px; }
+.meter-key i { width: 10px; height: 3px; display: inline-block; }
+
+/* ── contas ───────────────────────────────────────────────── */
+
+/* ── as contas ────────────────────────────────────────────── */
+/* Um bloco só, agrupado por mercado e colorido pela curva. As leituras vivem
+   dentro do grupo a que pertencem, em vez de num painel separado sem cor.
+   Cada linha traz a fórmula apagada em cima e a conta com os números embaixo. */
+
+.contas { display: grid; grid-template-columns: 1fr 1fr; gap: 30px 40px; align-items: start; }
+.eqcol { display: grid; gap: 30px; align-content: start; }
+@media (max-width: 899px) { .contas { grid-template-columns: 1fr; } }
+
+.eqgroup { border-left: 2px solid var(--rule); padding-left: 16px; }
+.eqgroup.is { border-left-color: var(--is); }
+.eqgroup.lm { border-left-color: var(--lm); }
+.eqgroup-h {
+  display: flex; align-items: baseline; gap: 9px; flex-wrap: wrap;
+  font-size: 14px; font-weight: 700; letter-spacing: .04em; margin-bottom: 4px;
+}
+.eqgroup.is .eqgroup-h { color: var(--is); }
+.eqgroup.lm .eqgroup-h { color: var(--lm); }
+.eqgroup-h span { font-weight: 500; font-size: 11.5px; letter-spacing: .02em; color: var(--ink-3); }
+
+/* Rótulo empilhado em vez de coluna à esquerda: a conta ganha a largura toda
+   e para de ser cortada, e rótulos de duas palavras param de quebrar. */
+.eqrow { padding: 12px 0 14px; }
+.eqrow + .eqrow { border-top: 1px solid var(--rule-2); }
+.eqlab {
+  display: block; margin-bottom: 6px;
+  font-size: 10px; font-weight: 600; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+.eqform, .eqval { display: block; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.eqform { font-size: 13px; line-height: 1.4; color: var(--ink-3); white-space: nowrap; overflow-x: auto; }
+.eqval { font-size: 15.5px; line-height: 1.45; color: var(--ink); margin-top: 3px; }
+/* a conta não quebra no meio; a glosa ao lado pode cair para a linha de baixo */
+.eqval .calc { display: inline-block; max-width: 100%; white-space: nowrap; overflow-x: auto; vertical-align: bottom; }
+.eqval u { font-style: normal; text-decoration: none; font-size: 11.5px; color: var(--ink-3); margin-left: 8px; }
+
+.foot {
+  border-top: 1px solid var(--rule); margin-top: 8px; padding: 18px 0 14px;
+  font-family: var(--serif); font-size: 13.5px; line-height: 1.5; color: var(--ink-3); max-width: 80ch;
+}
+
+/* Assinatura: discreta, no fim de toda pagina. Em .solo (paginas sem .foot)
+   ela mesma desenha o filete de separacao. */
+.assin {
+  margin: 0; padding: 0 0 44px;
+  font-family: var(--mono); font-size: 11px; line-height: 1.65;
+  letter-spacing: .02em; color: var(--ink-3);
+}
+.assin b { display: block; font-weight: 500; color: var(--ink-2); }
+.assin.solo { border-top: 1px solid var(--rule); margin-top: 40px; padding-top: 18px; }
+
+/* ── SVG ──────────────────────────────────────────────────── */
+
+.grid-line { stroke: var(--rule-2); stroke-width: 1; }
+.axis { stroke: var(--ink-3); stroke-width: 1; }
+.tick-text { font-family: var(--mono); font-size: 11px; fill: var(--ink-3); }
+.axis-title { font-family: var(--sans); font-size: 10.5px; font-weight: 600; letter-spacing: .14em; fill: var(--ink-3); }
+.curve { fill: none; stroke-width: 2.25; transition: opacity 180ms ease; }
+.curve.is { stroke: var(--is); }
+.curve.lm { stroke: var(--lm); }
+.dim .curve { opacity: .48; }
+.dim .curve.on { opacity: 1; }
+.hit { fill: none; stroke: transparent; stroke-width: 20; cursor: ew-resize; }
+.grp:focus-visible .curve { stroke-width: 3.5; opacity: 1; }
+.ghost { fill: none; stroke-width: 1.25; stroke-dasharray: 5 4; }
+.ghost.is { stroke: var(--is-soft); }
+.ghost.lm { stroke: var(--lm-soft); }
+.guide { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 3 3; opacity: .7; }
+.dot { fill: var(--ink); }
+.ring { fill: none; stroke: var(--ink); stroke-width: 1.5; }
+.ghost-ring { fill: none; stroke: var(--ink-3); stroke-width: 1; }
+.arrow { stroke: var(--ink-2); stroke-width: 1.25; fill: none; }
+.arrow-head { fill: var(--ink-2); }
+.clabel {
+  font-family: var(--sans); font-size: 13px; font-weight: 700; letter-spacing: .06em;
+  paint-order: stroke; stroke: var(--panel); stroke-width: 4px; stroke-linejoin: round;
+}
+.clabel.is { fill: var(--is); }
+.clabel.lm { fill: var(--lm); }
+.eqmark {
+  font-family: var(--mono); font-size: 11px; fill: var(--ink);
+  paint-order: stroke; stroke: var(--panel); stroke-width: 4px; stroke-linejoin: round;
+}
+#ghosts { transition: opacity 800ms ease; }
+
+/* ── responsivo ───────────────────────────────────────────── */
+
+@media (max-width: 1023px) {
+  .app { grid-template-columns: 1fr; gap: 26px; }
+  .col-out { order: 1; }
+  .col-ctrl { order: 2; }
+}
+@media (max-width: 719px) {
+  .tick-text { font-size: 15px; }
+  .axis-title { font-size: 14px; }
+  .clabel { font-size: 18px; }
+  .eqmark { font-size: 15px; }
+  input[type="range"] { height: 26px; }
+  input[type="range"]::-webkit-slider-thumb { margin-top: -8.5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   TELA DE ESCOLHA
+   ═══════════════════════════════════════════════════════════════ */
+
+.choose { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1px; background: var(--rule); margin: 8px 0 0; }
+
+.card {
+  display: flex; flex-direction: column; gap: 14px;
+  background: var(--bg); padding: 24px 22px 26px;
+  text-decoration: none; color: inherit;
+  border-bottom: 2px solid transparent;
+}
+a.card:hover { background: var(--panel); border-bottom-color: var(--is); }
+.card.soon { cursor: default; }
+.card.soon .card-art, .card.soon .card-name, .card.soon .card-d { opacity: .45; }
+
+.card-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.card-lvl { font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-3); }
+.card-chip {
+  font-size: 8.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--bg); background: var(--ink-3); padding: 2px 6px;
+}
+.card-name { margin: 0; font-size: 21px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.15; }
+.card-name span { display: block; font-size: 13px; font-weight: 500; color: var(--ink-3); margin-top: 3px; letter-spacing: 0; }
+.card-art { border: 1px solid var(--rule); background: var(--panel); }
+.card-art svg { display: block; width: 100%; height: auto; }
+.card-d { margin: 0; font-family: var(--serif); font-size: 14.5px; line-height: 1.5; color: var(--ink-2); }
+.card-meta {
+  margin-top: auto; padding-top: 4px;
+  font-family: var(--mono); font-size: 11px; color: var(--ink-3);
+  display: flex; flex-wrap: wrap; gap: 4px 14px;
+}
+.card-go { font-size: 11.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--is); }
+.card.soon .card-go { color: var(--ink-3); }
+
+/* ═══════════════════════════════════════════════════════════════
+   CRUZ KEYNESIANA (modelo simplificado)
+   ═══════════════════════════════════════════════════════════════ */
+
+.line45 { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 4 4; fill: none; }
+.curve.da { stroke: var(--is); }
+.ghost.da { stroke: var(--is-soft); }
+.clabel.da { fill: var(--is); }
+.clabel.ref { fill: var(--ink-3); }
+
+/* rodadas do multiplicador */
+.rounds { display: flex; flex-direction: column; gap: 5px; margin-top: 4px; }
+.round { display: grid; grid-template-columns: 76px minmax(0, 1fr) 74px; gap: 10px; align-items: center; }
+.round-l { font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+.round-bar { height: 9px; background: var(--is); min-width: 1px; }
+.round.rest .round-bar { background: var(--track); }
+.round-v { font-family: var(--mono); font-size: 11.5px; color: var(--ink-2); text-align: right; font-variant-numeric: tabular-nums; }
+.round.total { border-top: 1px solid var(--rule); padding-top: 7px; margin-top: 3px; }
+.round.total .round-l, .round.total .round-v { color: var(--ink); font-weight: 500; }
