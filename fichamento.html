@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fichamento · Modelo IS-LM</title>
+<meta name="description" content="Os cinco pontos do modelo IS-LM, para copiar à mão.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap">
+<link rel="stylesheet" href="estilo.css">
+<style>
+.wrap { max-width: 1000px; }
+
+/* ── uma ficha por pergunta ───────────────────────────────── */
+.ficha { border-top: 1px solid var(--rule); padding: 26px 0 4px; }
+.ficha:first-of-type { border-top: 0; }
+.ficha > h2 {
+  display: flex; align-items: baseline; gap: 12px;
+  margin: 0 0 14px; font-size: 19px; font-weight: 600; letter-spacing: -0.01em;
+}
+.ficha > h2 span {
+  flex: none; font-family: var(--mono); font-size: 12px; font-weight: 500;
+  color: var(--ink-3); border: 1px solid var(--rule); padding: 3px 8px;
+}
+/* texto à esquerda, desenho à direita; empilha em tela estreita */
+.corpo { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px 34px; align-items: start; }
+.corpo.solo { grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 780px) { .corpo { grid-template-columns: minmax(0, 1fr); } }
+
+p { margin: 0 0 11px; font-family: var(--serif); font-size: 15.5px; line-height: 1.55; color: var(--ink-2); max-width: 66ch; }
+p strong, li strong { color: var(--ink); font-weight: 600; }
+p.lead { color: var(--ink); }
+
+/* a seta de causa e efeito, em destaque discreto */
+.cadeia {
+  margin: 12px 0; padding: 11px 14px; background: var(--panel); border-left: 2px solid var(--is);
+  font-family: var(--serif); font-size: 15px; line-height: 1.5; color: var(--ink); max-width: 66ch;
+}
+.cadeia.lm { border-left-color: var(--lm); }
+
+/* fórmulas */
+.eq { margin: 12px 0; display: grid; gap: 7px; }
+.eq code {
+  font-family: var(--mono); font-size: 14px; color: var(--ink);
+  font-variant-numeric: tabular-nums; white-space: nowrap; overflow-x: auto;
+}
+.eq code b { font-weight: 500; color: var(--ink-3); }
+.opc { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); margin: 16px 0 4px; }
+
+ul { margin: 0 0 12px; padding-left: 18px; max-width: 66ch; }
+li { font-family: var(--serif); font-size: 15.5px; line-height: 1.55; color: var(--ink-2); margin-bottom: 5px; }
+
+/* desenhos */
+figure { margin: 0; }
+figure svg { display: block; width: 280px; max-width: 100%; height: auto; }
+figcaption { margin-top: 6px; font-family: var(--mono); font-size: 10.5px; color: var(--ink-3); text-align: center; }
+.ax { stroke: var(--ink-3); stroke-width: 1; }
+.gl { stroke: var(--rule); stroke-width: 1; stroke-dasharray: 3 3; }
+.cv { fill: none; stroke-width: 2.25; }
+.cv.is { stroke: var(--is); } .cv.lm { stroke: var(--lm); }
+.cv.fan { stroke-dasharray: 5 4; }
+.rot { font-family: var(--mono); font-size: 11px; fill: var(--ink-3); }
+.rot.b { fill: var(--is); } .rot.o { fill: var(--lm); }
+.pt { fill: var(--bg); stroke: var(--ink); stroke-width: 1.5; }
+
+/* tabela dos casos extremos */
+table { border-collapse: collapse; margin: 12px 0 4px; font-size: 14.5px; width: 100%; max-width: 620px; }
+th, td { text-align: left; padding: 9px 12px 9px 0; border-bottom: 1px solid var(--rule-2); vertical-align: top; }
+th { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); font-weight: 500; }
+td { font-family: var(--serif); color: var(--ink-2); }
+td:first-child { color: var(--ink); }
+
+.nota {
+  margin: 22px 0 0; padding: 13px 16px; background: var(--panel); border: 1px solid var(--rule);
+  font-family: var(--serif); font-size: 14.5px; line-height: 1.5; color: var(--ink-2); max-width: 72ch;
+}
+.nota b { color: var(--ink); }
+
+/* ── no papel, tinta escura sobre branco ──────────────────── */
+@media print {
+  :root {
+    color-scheme: light;
+    --bg: #fff; --panel: #f4f4f2; --panel-2: #fff;
+    --ink: #111; --ink-2: #333; --ink-3: #666;
+    --rule: #ccc; --rule-2: #e2e2e2;
+    --is: #1f5fae; --lm: #a8461a;
+  }
+  /* a:btn precisa do seletor com elemento: a.btn do estilo.css e mais especifico.
+     A assinatura fica: no papel ela e justamente o que identifica o trabalho. */
+  a.btn { display: none; }
+  .ficha { break-inside: avoid; border-top-color: #bbb; }
+  figure svg { width: 240px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>Fichamento <b>IS-LM</b></h1>
+      <p>Os cinco pontos, no essencial. A taxa de juros aparece como <b>i</b>.</p>
+    </div>
+    <a class="btn" href="index.html">← Simuladores</a>
+  </header>
+
+  <!-- 1 ─────────────────────────────────────────────────── -->
+  <section class="ficha">
+    <h2><span>1</span> Conceito e finalidade</h2>
+    <div class="corpo solo">
+      <div>
+        <p class="lead">Modelo de <strong>curto prazo</strong> (Hicks, 1937), que traduz a <i>Teoria Geral</i> de Keynes em um gráfico. Supõe <strong>preços fixos</strong> e <strong>economia fechada</strong>.</p>
+        <p>Determina <strong>ao mesmo tempo</strong> duas variáveis: a renda (Y) e a taxa de juros (i) — os valores que equilibram simultaneamente o <strong>mercado de bens</strong> (curva IS) e o <strong>mercado monetário</strong> (curva LM).</p>
+        <p><strong>Finalidade:</strong> mostrar o efeito da política fiscal e da monetária sobre produto e juros no curto prazo, e — o ponto central — que <strong>as duas interagem</strong>: o resultado de uma depende de como a outra se comporta.</p>
+        <div class="cadeia">Premissa que sustenta tudo: com preços rígidos, é a <strong>demanda</strong> que determina o produto no curto prazo.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 ─────────────────────────────────────────────────── -->
+  <section class="ficha">
+    <h2><span>2</span> Funcionamento da curva IS</h2>
+    <div class="corpo">
+      <div>
+        <p class="lead">Combinações de (Y, i) que equilibram o <strong>mercado de bens</strong>: Y = C + I + G.</p>
+        <div class="eq">
+          <code>C = C₀ + c(Y − T)<b>   consumo depende da renda disponível</b></code>
+          <code>I = I₀ − b·i<b>   investimento cai quando o juro sobe</b></code>
+          <code>G, T<b>   dados pelo governo</b></code>
+        </div>
+        <p><strong>Por que é decrescente</strong> — é esta linha que importa:</p>
+        <div class="cadeia">i ↑ → investimento ↓ → demanda ↓ → produto ↓, e a queda é <strong>amplificada pelo multiplicador</strong> 1/(1−c).</div>
+        <p class="opc">opcional · a álgebra</p>
+        <div class="eq">
+          <code>Y = (A − b·i) / (1 − c)</code>
+          <code>A = C₀ − cT + I₀ + G<b>   gasto autônomo</b></code>
+        </div>
+        <p><strong>Deslocamentos:</strong> qualquer mudança em A desloca a curva — G ↑ ou T ↓ jogam a IS para a <strong>direita</strong>. Mudança em i <strong>não</strong> desloca a IS: anda-se <i>sobre</i> ela.</p>
+        <p><strong>Inclinação:</strong> mais plana quanto maiores forem b e c.</p>
+      </div>
+      <figure>
+        <svg viewBox="0 0 280 190" role="img" aria-label="Curva IS: reta decrescente no plano renda por juros.">
+          <line class="ax" x1="44" y1="16" x2="44" y2="160"></line>
+          <line class="ax" x1="44" y1="160" x2="262" y2="160"></line>
+          <text class="rot" x="34" y="22">i</text>
+          <text class="rot" x="258" y="178">Y</text>
+          <line class="cv is" x1="56" y1="32" x2="232" y2="152"></line>
+          <text class="rot b" x="236" y="150">IS</text>
+        </svg>
+        <figcaption>decrescente</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 3 ─────────────────────────────────────────────────── -->
+  <section class="ficha">
+    <h2><span>3</span> Funcionamento da curva LM</h2>
+    <div class="corpo">
+      <div>
+        <p class="lead">Combinações de (Y, i) que equilibram oferta e demanda de <strong>moeda</strong>.</p>
+        <div class="eq">
+          <code>M/P = k·Y − h·i</code>
+          <code>M/P<b>   oferta real de moeda</b></code>
+          <code>k·Y<b>   demanda por transações, cresce com a renda</b></code>
+          <code>h·i<b>   demanda especulativa, cai quando o juro sobe</b></code>
+        </div>
+        <p>O juro é o <strong>custo de segurar dinheiro parado</strong> — por isso a demanda especulativa entra com sinal negativo.</p>
+        <p><strong>Por que é crescente:</strong></p>
+        <div class="cadeia lm">Y ↑ → mais transações → mais demanda por moeda. Como a oferta M/P está <strong>fixa</strong>, o juro precisa <strong>subir</strong> para desestimular a retenção e reequilibrar o mercado.</div>
+        <p class="opc">opcional · a álgebra</p>
+        <div class="eq"><code>i = (k·Y − M/P) / h</code></div>
+        <p><strong>Deslocamentos:</strong> M ↑ (ou P ↓) aumenta a oferta real e joga a LM para a <strong>direita</strong>.</p>
+        <p><strong>Dois casos extremos</strong>, que rendem muito no ponto 5: h muito grande deixa a LM quase <strong>horizontal</strong> (armadilha da liquidez); h = 0 a deixa <strong>vertical</strong> (caso clássico).</p>
+      </div>
+      <figure>
+        <svg viewBox="0 0 280 190" role="img" aria-label="Curva LM: reta crescente no plano renda por juros.">
+          <line class="ax" x1="44" y1="16" x2="44" y2="160"></line>
+          <line class="ax" x1="44" y1="160" x2="262" y2="160"></line>
+          <text class="rot" x="34" y="22">i</text>
+          <text class="rot" x="258" y="178">Y</text>
+          <line class="cv lm" x1="56" y1="152" x2="232" y2="32"></line>
+          <text class="rot o" x="236" y="34">LM</text>
+        </svg>
+        <figcaption>crescente</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 4 ─────────────────────────────────────────────────── -->
+  <section class="ficha">
+    <h2><span>4</span> Determinação do equilíbrio</h2>
+    <div class="corpo">
+      <div>
+        <p class="lead">O equilíbrio é o <strong>cruzamento</strong> das duas curvas: o único par (Y*, i*) que equilibra <strong>os dois mercados ao mesmo tempo</strong>.</p>
+        <p>Em qualquer outro ponto, ao menos um mercado está em desequilíbrio, e as forças de ajuste — estoques indesejados no mercado de bens, compra e venda de títulos no mercado monetário — empurram a economia de volta ao cruzamento.</p>
+        <p class="opc">opcional · solução fechada</p>
+        <div class="eq">
+          <code>D = h(1−c) + b·k</code>
+          <code>Y* = (h·A + b·M/P) / D</code>
+          <code>i* = (k·A − (1−c)·M/P) / D</code>
+        </div>
+      </div>
+      <figure>
+        <svg viewBox="0 0 280 190" role="img" aria-label="IS e LM cruzando no ponto de equilíbrio.">
+          <line class="ax" x1="44" y1="16" x2="44" y2="160"></line>
+          <line class="ax" x1="44" y1="160" x2="262" y2="160"></line>
+          <text class="rot" x="34" y="22">i</text>
+          <text class="rot" x="258" y="178">Y</text>
+          <line class="gl" x1="44" y1="101" x2="136" y2="101"></line>
+          <line class="gl" x1="136" y1="101" x2="136" y2="160"></line>
+          <line class="cv is" x1="52" y1="40" x2="210" y2="155"></line>
+          <line class="cv lm" x1="52" y1="152" x2="240" y2="38"></line>
+          <text class="rot b" x="214" y="156">IS</text>
+          <text class="rot o" x="244" y="40">LM</text>
+          <circle class="pt" cx="136" cy="101" r="4.5"></circle>
+          <text class="rot" x="26" y="105">i*</text>
+          <text class="rot" x="130" y="176">Y*</text>
+        </svg>
+        <figcaption>o cruzamento</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 5 ─────────────────────────────────────────────────── -->
+  <section class="ficha">
+    <h2><span>5</span> Efeitos da política fiscal e monetária</h2>
+    <div class="corpo">
+      <div>
+        <p class="lead"><strong>Fiscal expansionista</strong> (G ↑ ou T ↓) desloca a <strong>IS para a direita</strong>. Resultado: <strong>Y ↑ e i ↑</strong>.</p>
+        <p>É aqui que aparece o mecanismo que a cruz keynesiana não tem:</p>
+        <div class="cadeia">Mais renda → mais demanda por moeda → <strong>o juro sobe</strong> → parte do investimento privado é expulsa. É o <strong>efeito deslocamento</strong> (<i>crowding out</i>).</div>
+        <p>Por isso o multiplicador aqui é <strong>menor</strong> que 1/(1−c): parte do impulso vaza pelo juro.</p>
+        <p class="lead"><strong>Monetária expansionista</strong> (M ↑) desloca a <strong>LM para a direita</strong>. Resultado: <strong>Y ↑ e i ↓</strong>.</p>
+        <div class="cadeia lm">Mais moeda → o juro cai → o investimento sobe → demanda e produto sobem.</div>
+      </div>
+      <figure>
+        <svg viewBox="0 0 280 190" role="img" aria-label="Deslocamento da IS para a direita: o equilíbrio sobe ao longo da LM.">
+          <line class="ax" x1="44" y1="16" x2="44" y2="160"></line>
+          <line class="ax" x1="44" y1="160" x2="262" y2="160"></line>
+          <text class="rot" x="34" y="22">i</text>
+          <text class="rot" x="258" y="178">Y</text>
+          <line class="cv is" x1="52" y1="40" x2="196" y2="145"></line>
+          <line class="cv is fan" x1="92" y1="40" x2="236" y2="145"></line>
+          <line class="cv lm" x1="52" y1="152" x2="240" y2="38"></line>
+          <text class="rot o" x="244" y="40">LM</text>
+          <text class="rot b" x="199" y="148">IS</text>
+          <text class="rot b" x="239" y="148">IS'</text>
+          <circle class="pt" cx="136" cy="101" r="4"></circle>
+          <circle class="pt" cx="158" cy="88" r="4"></circle>
+          <path d="M 142 97 L 152 92" stroke="var(--ink)" stroke-width="1.2" fill="none"></path>
+          <path d="M 152 92 l -4.5 0 l 2 3.2 z" fill="var(--ink)"></path>
+        </svg>
+        <figcaption>fiscal: Y ↑ e i ↑</figcaption>
+      </figure>
+    </div>
+
+    <div class="corpo solo">
+      <div>
+        <p class="opc">quando cada uma funciona</p>
+        <table>
+          <thead><tr><th>Formato da LM</th><th>Fiscal</th><th>Monetária</th></tr></thead>
+          <tbody>
+            <tr><td>Horizontal<br><small>armadilha da liquidez</small></td><td><strong>máxima</strong> — sem crowding out</td><td><strong>impotente</strong> — o juro não cai mais</td></tr>
+            <tr><td>Vertical<br><small>caso clássico</small></td><td><strong>nula</strong> — expulsa 100 %</td><td><strong>máxima</strong></td></tr>
+          </tbody>
+        </table>
+
+        <div class="nota">
+          <b>Para fechar com um número.</b> Um pacote de obras de +200 em G eleva o produto em <b>+500</b> na cruz keynesiana, mas só em <b>+222</b> no IS-LM: o juro sobe de 5 % para 7,2 % e derruba o investimento de 150 para 39. <b>Os 111 que sumiram são o crowding out.</b>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <p class="foot">Notação: o juro é <b>i</b>, como em Blanchard. Com preços fixos e sem inflação esperada, o juro nominal e o real coincidem (i = r) — confira mesmo assim qual letra o professor usou em aula e copie a dele. Ao escrever à mão, faça o <b>I</b> de investimento bem maior que o <b>i</b> de juros: eles dividem a mesma equação em I = I₀ − b·i.</p>
+
+  <p class="assin"><b>Criado pelo aluno Bruno Alves Riether</b>Matrícula 261012139</p>
+
+</div>
+</body>
+</html>

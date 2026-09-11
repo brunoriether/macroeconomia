@@ -179,6 +179,7 @@ NÍVEL 3 — IS-LM COMPLETO (modelo-intermediario.html)
   modelo-islm-basico.html     Nível 2 — IS-LM básico.
   modelo-intermediario.html   Nível 3 — IS-LM completo.
   glossario.html              Glossário completo, com busca. Cobre os dois modelos.
+  fichamento.html             Resumo dos cinco pontos do IS-LM, para copiar à mão.
 
   modelo-simples.js           Modelo, termos, cadeias e cenários do nível 1.
   modelo-intermediario.js     Modelo, termos, cadeias e cenários do IS-LM.
