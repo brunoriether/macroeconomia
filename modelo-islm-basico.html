@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>IS-LM completo · Bússola Macro</title>
-<meta name="description" content="Simulador do modelo IS-LM: mexa nos parâmetros da economia e veja renda e juros encontrarem o equilíbrio.">
+<title>IS-LM básico · Bússola Macro</title>
+<meta name="description" content="Simulador do IS-LM na forma do livro-texto: mexa nos gastos, nos tributos e na moeda e veja renda e juros encontrarem o equilíbrio.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap">
@@ -21,8 +21,8 @@
 
   <header class="top">
     <div>
-      <h1>IS-LM <b>completo</b></h1>
-      <p>Aqui também se mexe nas sensibilidades e no instrumento do Banco Central — o que muda a <em>inclinação</em> das curvas, não só a posição.</p>
+      <h1>IS-LM <b>básico</b></h1>
+      <p>Mexa na demanda, nos gastos, nos tributos e na moeda, e veja renda e juros encontrarem o equilíbrio.</p>
     </div>
     <a class="btn" href="index.html">← Modelos</a>
   </header>
@@ -119,7 +119,7 @@
     </section>
   </main>
 
-  <p class="foot">Modelo keynesiano de curto prazo, com preços fixos e economia fechada. A escala monetária (R$ bi) é arbitrária mas consistente entre todas as variáveis — o que importa são as proporções e os sentidos, não os valores absolutos. Se as sensibilidades parecerem demais, o <a href="modelo-islm-basico.html" style="color:var(--ink-2)">IS-LM básico</a> tem as mesmas curvas com menos botões.</p>
+  <p class="foot">Modelo keynessiano de curto prazo, com preços fixos e economia fechada — a forma em que o IS-LM aparece no livro-texto: você move a demanda e as políticas, e o resto do modelo fica parado. As sensibilidades do investimento e da demanda por moeda continuam agindo por trás, no valor de base; para mexer nelas, e na meta de juros do Banco Central, vá ao <a href="modelo-intermediario.html" style="color:var(--ink-2)">modelo completo</a>. A escala monetária (R$ bi) é arbitrária mas consistente entre todas as variáveis.</p>
 
   <p class="assin"><b>Criado pelo aluno Bruno Alves Riether</b>Matrícula 261012139</p>
 
@@ -133,7 +133,7 @@
 </div>
 
 <script src="modelo-intermediario.js"></script>
-<script>window.ISLM_NIVEL = "completo";</script>
+<script>window.ISLM_NIVEL = "basico";</script>
 <script src="app-islm.js"></script>
 </body>
 </html>

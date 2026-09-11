@@ -87,7 +87,21 @@ NÍVEL 1 — CRUZ KEYNESIANA (modelo-simplificado.html)
   de R$ 100 vira R$ 60 na rodada seguinte, R$ 36 na outra, e assim por diante
   até somar R$ 250. É de onde vem o 1/(1−c).
 
-NÍVEL 2 — IS-LM (modelo-intermediario.html)
+NÍVEL 2 — IS-LM BÁSICO (modelo-islm-basico.html)
+
+  As mesmas duas curvas do nível 3, com seis controles em vez de onze:
+  C₀, c, I₀, G, T e M. As sensibilidades b, k e h, o nível de preços e a
+  meta de juros continuam agindo — no valor de base —, mas saem da tela.
+
+  É a forma em que o livro-texto apresenta o modelo: você DESLOCA as
+  curvas, sem GIRÁ-LAS. Dos doze cenários, sobram os sete que cabem
+  aqui; os outros cinco mexem em parâmetro escondido ou em regime.
+
+  A tela é a mesma aplicação do nível 3 (app-islm.js), ligada em outro
+  modo por window.ISLM_NIVEL. Não há cópia de código entre as duas.
+
+
+NÍVEL 3 — IS-LM COMPLETO (modelo-intermediario.html)
 
   Bens : Y = C + I + G,  C = C₀ + c(Y − T),  I = I₀ − b·i
   Moeda: M/P = k·Y − h·i
@@ -101,6 +115,28 @@ NÍVEL 2 — IS-LM (modelo-intermediario.html)
   Notação: o juro é i, como em Blanchard. Com preços fixos e sem inflação
   esperada, o juro nominal e o real coincidem (i = r), e i é também a letra
   usada na paridade de juros do Mundell-Fleming, o próximo modelo da fila.
+
+  DE ONDE VEM ESTA FORMA DO MODELO
+
+  A forma linear — I = I₀ − b·i e (M/P)ᵈ = k·Y − h·i — é a notação de
+  Dornbusch, Fischer & Startz, padrão em macro intermediária. O Blanchard
+  escreve o MESMO modelo com funções genéricas:
+
+     IS:  Y = C(Y − T) + I(Y, i) + G
+     LM:  M/P = Y · L(i)
+
+  Sem intercepto nomeado e sem coeficiente nomeado. Um simulador precisa
+  desenhar a reta, e para isso precisa de número: por isso a forma linear.
+  b é a inclinação da função I do Blanchard; h e k são as inclinações da L
+  dele em relação a i e a Y. Não é outro modelo, é uma forma funcional
+  escolhida.
+
+  Uma diferença real, que vale registrar: no Blanchard o investimento
+  depende TAMBÉM da renda, I(Y, i); aqui depende só do juro. Isso altera a
+  inclinação da IS, não o sentido de nenhum resultado.
+
+  O nível 2 existe justamente por causa disso: é o modelo com os parâmetros
+  fora da tela, mais próximo do que se vê no livro.
 
   A forma fechada de i* NÃO divide por h de propósito: assim o caso clássico
   (h = 0, LM vertical) sai da mesma conta, sem exceção no código.
@@ -140,12 +176,14 @@ NÍVEL 2 — IS-LM (modelo-intermediario.html)
 
   index.html                  Tela de escolha do modelo.
   modelo-simplificado.html    Nível 1 — cruz keynesiana.
-  modelo-intermediario.html   Nível 2 — IS-LM.
-  glossario.html              Glossário completo, com busca. Cobre os dois níveis.
+  modelo-islm-basico.html     Nível 2 — IS-LM básico.
+  modelo-intermediario.html   Nível 3 — IS-LM completo.
+  glossario.html              Glossário completo, com busca. Cobre os dois modelos.
 
   modelo-simples.js           Modelo, termos, cadeias e cenários do nível 1.
-  modelo-intermediario.js     Modelo, termos, cadeias e cenários do nível 2.
-  estilo.css                  Visual compartilhado pelas quatro páginas.
+  modelo-intermediario.js     Modelo, termos, cadeias e cenários do IS-LM.
+  app-islm.js                 A interface do IS-LM, usada pelos níveis 2 e 3.
+  estilo.css                  Visual compartilhado por todas as páginas.
 
   README.txt                  Este arquivo.
 

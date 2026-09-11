@@ -222,7 +222,8 @@ var SCENARIOS = [
 
   { id:"confianca", section:"Choques", mode:"moeda", name:"O ano dos projetos engavetados", set:{ I0:220 },
     story:"Dois trimestres de manchete ruim e uma eleição apertada bastaram para os conselhos das grandes empresas engavetarem expansão. A montadora adiou a segunda linha de produção e a encomenda de máquina parou de chegar.",
-    watch:"A IS recuou para a esquerda e o equilíbrio desceu sobre a LM: produto 800, juro 3,00 %. Renda menor significa menos demanda por moeda, então o juro cede sozinho, sem ação do BC, e amortece a queda — o investimento realizado para em 70. Sob meta de juros, o produto iria a 550." },
+    watch:"A IS recuou para a esquerda e o equilíbrio desceu sobre a LM: produto 800, juro 3,00 %. Renda menor significa menos demanda por moeda, então o juro cede sozinho, sem ação do BC, e amortece a queda — o investimento realizado para em 70. Sob meta de juros, o produto iria a 550.",
+    watchBasico:"A IS recuou para a esquerda e o equilíbrio desceu sobre a LM: produto 800, juro 3,00 %. Renda menor significa menos demanda por moeda, então o juro cede sozinho, sem ação do Banco Central, e amortece a queda — o investimento realizado para em 70." },
 
   { id:"inflacao", section:"Choques", mode:"moeda", name:"A nota de cem encolheu", set:{ P:1.40 },
     story:"Seca nas hidrelétricas e câmbio pressionado empurraram energia, frete e alimento juntos. Em um ano os preços subiram 40 %, e a nota de cem passou a comprar 70 % do carrinho anterior. O dinheiro na conta não mudou de número, mudou de tamanho.",
