@@ -291,6 +291,7 @@ input[type="range"]:focus-visible { outline: 2px solid var(--fill); outline-offs
 }
 .compo i { font-style: normal; color: var(--ink-3); margin-right: 6px; }
 .result { background: var(--panel); padding: 15px 18px 17px; }
+.result-label .sym { text-transform: none; }   /* i* precisa continuar minusculo */
 .result-label { font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); }
 .result-val {
   margin-top: 7px; font-family: var(--mono); font-size: clamp(26px, 3.4vw, 36px);

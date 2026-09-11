@@ -6,9 +6,9 @@
    dado e passa a reagir ao custo do crédito — e é por isso que a política
    fiscal passa a ter de disputar espaço com o investimento privado.
 
-   Bens   : Y = C + I + G,   C = C₀ + c(Y − T),   I = I₀ − b·r
-   Moeda  : M/P = k·Y − h·r
-   IS     : (1 − c)·Y = A − b·r,   com A = C₀ − cT + I₀ + G
+   Bens   : Y = C + I + G,   C = C₀ + c(Y − T),   I = I₀ − b·i
+   Moeda  : M/P = k·Y − h·i
+   IS     : (1 − c)·Y = A − b·i,   com A = C₀ − cT + I₀ + G
    ═══════════════════════════════════════════════════════════════════════ */
 
 var MODELO_INTER = (function () {
@@ -25,58 +25,58 @@ var PURE  = { name:"adimensional" };
 var PARAMS = [
   { id:"C0", sym:"C₀", curve:"IS", u:MONEY, label:"Consumo autônomo", min:0, max:400, step:5, base:120,
     desc:"O piso do consumo, que existe mesmo com renda zero. O consumo realizado é bem maior: C = C₀ + c(Y − T).",
-    eff:"↑ desloca a IS para a direita: Y e r sobem.",
-    effR:"↑ desloca a IS para a direita: Y sobe, o juro fica na meta." },
+    eff:"↑ desloca a IS para a direita: Y e i sobem.",
+    effMeta:"↑ desloca a IS para a direita: Y sobe, o juro fica na meta." },
 
   { id:"c", sym:"c", curve:"IS", u:PURE, label:"Propensão marginal a consumir", min:0.10, max:0.90, step:0.01, base:0.60, dec:2,
     desc:"De cada real a mais de renda disponível, quanto vira consumo. O resto vira poupança. É o motor do multiplicador.",
     eff:"↑ achata a IS e a empurra à direita.",
-    effR:"↑ achata a IS: o multiplicador age inteiro, sem freio do juro." },
+    effMeta:"↑ achata a IS: o multiplicador age inteiro, sem freio do juro." },
 
   { id:"I0", sym:"I₀", curve:"IS", u:MONEY, label:"Investimento autônomo", min:0, max:800, step:10, base:400,
-    desc:"O quanto as empresas investiriam com juro zero. O investimento realizado é menor: I = I₀ − b·r, já descontado o custo do crédito.",
-    eff:"↑ desloca a IS para a direita: Y e r sobem.",
-    effR:"↑ desloca a IS para a direita: Y sobe, o juro fica na meta." },
+    desc:"O quanto as empresas investiriam com juro zero. O investimento realizado é menor: I = I₀ − b·i, já descontado o custo do crédito.",
+    eff:"↑ desloca a IS para a direita: Y e i sobem.",
+    effMeta:"↑ desloca a IS para a direita: Y sobe, o juro fica na meta." },
 
   { id:"b", sym:"b", curve:"IS", u:SENS, label:"Sensibilidade do investimento ao juro", min:0, max:150, step:5, base:50,
     desc:"Quantos R$ bi de investimento se perdem a cada ponto percentual a mais de juro. É o que define a inclinação da IS.",
     eff:"↑ achata a IS: a política fiscal perde força, a monetária ganha.",
-    effR:"↑ faz o investimento reagir mais à meta: com r̄ acima de zero, Y cai." },
+    effMeta:"↑ faz o investimento reagir mais à meta: com ī acima de zero, Y cai." },
 
   { id:"G", sym:"G", curve:"IS", u:MONEY, label:"Gastos do governo", min:0, max:800, step:10, base:250,
     desc:"Compras de bens e serviços pelo governo. Entram direto na demanda agregada, sem passar pela renda das famílias.",
     eff:"↑ desloca a IS para a direita e puxa o juro junto.",
-    effR:"↑ desloca a IS com o multiplicador cheio — sem crowding out." },
+    effMeta:"↑ desloca a IS com o multiplicador cheio — sem crowding out." },
 
   { id:"T", sym:"T", curve:"IS", u:MONEY, label:"Tributos", min:0, max:800, step:10, base:200,
     desc:"Impostos líquidos de transferências. Cortam a renda disponível antes de ela virar consumo, então batem na demanda de forma indireta.",
     eff:"↑ desloca a IS para a esquerda, com força menor que a de G.",
-    effR:"↑ desloca a IS para a esquerda, e o juro não cai para amortecer." },
+    effMeta:"↑ desloca a IS para a esquerda, e o juro não cai para amortecer." },
 
   { id:"M", sym:"M", curve:"LM", u:MONEY, label:"Oferta de moeda", min:0, max:800, step:10, base:300,
     desc:"O estoque nominal de moeda em circulação. Sob meta de moeda é o instrumento do Banco Central; sob meta de juros, vira resultado.",
     eff:"↑ desloca a LM para a direita: o juro cai e Y sobe.",
-    effR:"Virou resultado: o BC entrega a moeda que o mercado pedir." },
+    effMeta:"Virou resultado: o BC entrega a moeda que o mercado pedir." },
 
-  { id:"rbar", sym:"r̄", curve:"LM", u:PCT, label:"Meta de juros do Banco Central", min:0, max:15, step:0.25, base:5.00, dec:2,
+  { id:"ibar", sym:"ī", curve:"LM", u:PCT, label:"Meta de juros do Banco Central", min:0, max:15, step:0.25, base:5.00, dec:2,
     desc:"A taxa que o Banco Central anuncia e se compromete a sustentar — a Selic. Para mantê-la, fornece ou enxuga a moeda que for preciso.",
     eff:"Aqui é resultado: sai do cruzamento das duas curvas.",
-    effR:"↑ encarece o crédito: o investimento cai e Y cai pelo multiplicador." },
+    effMeta:"↑ encarece o crédito: o investimento cai e Y cai pelo multiplicador." },
 
   { id:"P", sym:"P", curve:"LM", u:PURE, label:"Nível de preços", min:0.40, max:2.50, step:0.05, base:1.00, dec:2,
     desc:"Índice geral de preços, exógeno no curto prazo. Só entra dividindo M: o que a LM enxerga é a oferta real M/P.",
     eff:"↑ encolhe M/P e desloca a LM para a esquerda.",
-    effR:"↑ exige mais moeda nominal para o mesmo M/P. Não mexe em Y." },
+    effMeta:"↑ exige mais moeda nominal para o mesmo M/P. Não mexe em Y." },
 
   { id:"k", sym:"k", curve:"LM", u:PURE, label:"Demanda de moeda por renda", min:0.15, max:1.20, step:0.05, base:0.60, dec:2,
     desc:"Quanta moeda se quer reter por real de renda, para fazer transações. É o motivo transação da demanda por moeda.",
     eff:"↑ deixa a LM mais vertical: o produto responde menos.",
-    effR:"↑ exige mais moeda para o mesmo Y. Não mexe em Y." },
+    effMeta:"↑ exige mais moeda para o mesmo Y. Não mexe em Y." },
 
   { id:"h", sym:"h", curve:"LM", u:SENS, label:"Demanda de moeda por juro", min:0, max:240, step:5, base:60,
     desc:"Quanta moeda se deixa de reter a cada ponto percentual de juro — juro alto é o custo de ficar líquido. É o motivo especulação.",
     eff:"↑ achata a LM rumo à armadilha; ↓ a verticaliza rumo ao caso clássico.",
-    effR:"↑ reduz a moeda necessária para sustentar a meta. Não mexe em Y." }
+    effMeta:"↑ reduz a moeda necessária para sustentar a meta. Não mexe em Y." }
 ];
 
 var P_BY_ID = {};
@@ -87,7 +87,7 @@ PARAMS.forEach(function (p) { P_BY_ID[p.id] = p; });
 var TABS = {
   IS: { groups:[ { title:"Demanda", ids:["C0","c","I0","b"] },
                  { title:"Política fiscal", ids:["G","T"] } ] },
-  LM: { groups:[ { title:"Instrumento do Banco Central", regime:true, ids:["M","rbar"] },
+  LM: { groups:[ { title:"Instrumento do Banco Central", regime:true, ids:["M","ibar"] },
                  { title:"Demanda por moeda", ids:["P","k","h"] } ] }
 };
 
@@ -99,7 +99,7 @@ function baseState() {
 
 /* Regime monetário — quem o Banco Central escolhe controlar:
      "moeda" = IS-LM de Hicks: fixa M, o juro sai do cruzamento.
-     "juros" = IS-MP (Romer, 2000): fixa r-barra, a LM vira horizontal e a moeda vira endógena.
+     "juros" = IS-MP (Romer, 2000): fixa ī, a LM vira horizontal e a moeda vira endógena.
    Quem guarda o regime corrente é a página; aqui ele é sempre um argumento. */
 function solve(s, md) {
   md = md || "moeda";
@@ -107,8 +107,8 @@ function solve(s, md) {
   var out = { A:A, ok:true, mode:md };
 
   if (md === "juros") {
-    var rb = s.rbar;
-    out.r  = rb;
+    var rb = s.ibar;
+    out.i  = rb;
     out.Y  = (1 - s.c) > EPS ? (A - s.b * rb) / (1 - s.c) : NaN;
     out.mp = s.k * out.Y - s.h * rb;              // moeda que o BC PRECISA entregar
     out.ok = isFinite(out.Y);
@@ -121,11 +121,11 @@ function solve(s, md) {
     var den = s.h * (1 - s.c) + s.b * s.k;
     out.mp = mp; out.den = den;
     if (Math.abs(den) < EPS) {                    // IS e LM ambas verticais
-      out.ok = false; out.Y = NaN; out.r = NaN;
+      out.ok = false; out.Y = NaN; out.i = NaN;
     } else {
       out.Y = (s.h * A + s.b * mp) / den;
       // forma fechada que NÃO divide por h: vale também no caso clássico h = 0
-      out.r = (s.k * A - (1 - s.c) * mp) / den;
+      out.i = (s.k * A - (1 - s.c) * mp) / den;
     }
     out.multFiscal = s.h / den;                   // dY*/dG
     out.multMoney  = s.b / den;                   // dY*/d(M/P)
@@ -135,7 +135,7 @@ function solve(s, md) {
   }
 
   out.C = s.C0 + s.c * (out.Y - s.T);
-  out.I = s.I0 - s.b * out.r;
+  out.I = s.I0 - s.b * out.i;
   out.S = out.Y - s.T - out.C;
   out.multSimple = 1 / (1 - s.c);                 // 1/(1−c), sem freio monetário
 
@@ -150,9 +150,9 @@ function solve(s, md) {
 var TERMS = {
   "curva-is": { t:"Curva IS", d:"Todas as combinações de renda e juro que equilibram o mercado de bens: o que se produz é igual ao que se demanda. Inclinação negativa, porque juro menor estimula o investimento e, com ele, a renda." },
   "curva-lm": { t:"Curva LM", d:"Todas as combinações de renda e juro que equilibram o mercado de moeda. Inclinação positiva, porque renda maior exige mais moeda para transações e pressiona o juro." },
-  "equilibrio": { t:"Equilíbrio de curto prazo", d:"O cruzamento das duas curvas: o único par (Y*, r*) em que os mercados de bens e de moeda estão equilibrados ao mesmo tempo, com os preços dados." },
+  "equilibrio": { t:"Equilíbrio de curto prazo", d:"O cruzamento das duas curvas: o único par (Y*, i*) em que os mercados de bens e de moeda estão equilibrados ao mesmo tempo, com os preços dados." },
   "renda": { t:"Renda de equilíbrio (Y*)", d:"O produto no ponto em que os dois mercados se equilibram. É resultado do modelo, nunca entrada — por isso o ponto não é arrastável no gráfico, embora as curvas sejam." },
-  "juro": { t:"Juro de equilíbrio (r*)", d:"A taxa que zera o excesso de demanda por moeda no nível de renda Y*. Sob meta de juros ela deixa de ser resultado e passa a ser escolhida pelo Banco Central." },
+  "juro": { t:"Juro de equilíbrio (i*)", d:"A taxa que zera o excesso de demanda por moeda no nível de renda Y*. Sob meta de juros ela deixa de ser resultado e passa a ser escolhida pelo Banco Central." },
   "demanda-agregada": { t:"Demanda agregada", d:"Soma do que famílias, empresas e governo querem comprar: C + I + G. É ela que determina o produto no curto prazo." },
   "renda-disponivel": { t:"Renda disponível", d:"A renda que sobra para as famílias depois dos impostos: Y menos T. É sobre ela que a propensão marginal a consumir age." },
   "multiplicador": { t:"Multiplicador", d:"Quantas vezes um aumento inicial de gasto se amplia na renda total, porque o gasto de um vira renda de outro. Quanto maior c, maior o multiplicador. O multiplicador simples 1/(1−c) só vale se o juro ficar parado." },
@@ -166,7 +166,7 @@ var TERMS = {
   "meta-juros": { t:"Meta de juros (IS-MP)", d:"Regime em que o Banco Central fixa a taxa e fornece toda a moeda demandada àquele preço. A LM vira horizontal, a moeda vira resultado e o crowding out desaparece. É como os bancos centrais operam de verdade desde os anos 1990 — o Copom anuncia a Selic, não quantos reais vai emitir." },
   "gasto-autonomo": { t:"Gasto autônomo (A)", d:"A parte da demanda que não depende da renda: C₀ − cT + I₀ + G. É o que desloca a curva IS horizontalmente, na razão ΔA/(1−c)." },
   "motivo-transacao": { t:"Motivo transação", d:"A moeda que se retém simplesmente para pagar contas, proporcional à renda. É o termo k·Y da demanda por moeda." },
-  "motivo-especulacao": { t:"Motivo especulação", d:"A moeda que se deixa de reter quando o juro sobe, porque ficar líquido passa a custar caro. É o termo −h·r da demanda por moeda." }
+  "motivo-especulacao": { t:"Motivo especulação", d:"A moeda que se deixa de reter quando o juro sobe, porque ficar líquido passa a custar caro. É o termo −h·i da demanda por moeda." }
 };
 
 // cada parâmetro também é um termo, com sua própria definição e unidade
@@ -181,30 +181,30 @@ function SH(c, d) { return { t:c + " desloca", d:d, shift:true, curve:c, term:c 
 function RO(c, f) { return { t:c + " gira", flat:f, rot:true, curve:c, term:c === "IS" ? "curva-is" : "curva-lm" }; }
 
 var CHAINS = {
-  C0: [ T("consumo autônomo",1), T("demanda agregada",1,null,"demanda-agregada"), SH("IS",1), T("Y",1), T("demanda por moeda",1), T("r",1), T("I",-1) ],
-  c:  [ T("consumo por real de renda",1), T("multiplicador",1,null,"multiplicador"), RO("IS",true), T("Y",1), T("r",1), T("I",-1) ],
-  I0: [ T("investimento autônomo",1), T("demanda agregada",1,null,"demanda-agregada"), SH("IS",1), T("Y",1), T("r",1), T("I",-1) ],
+  C0: [ T("consumo autônomo",1), T("demanda agregada",1,null,"demanda-agregada"), SH("IS",1), T("Y",1), T("demanda por moeda",1), T("i",1), T("I",-1) ],
+  c:  [ T("consumo por real de renda",1), T("multiplicador",1,null,"multiplicador"), RO("IS",true), T("Y",1), T("i",1), T("I",-1) ],
+  I0: [ T("investimento autônomo",1), T("demanda agregada",1,null,"demanda-agregada"), SH("IS",1), T("Y",1), T("i",1), T("I",-1) ],
   b:  [ T("reação do investimento ao juro",1), RO("IS",true), T("crowding out",1,null,"crowding-out"), T("força da política fiscal",-1,null,"politica-fiscal") ],
-  G:  [ T("demanda agregada",1,null,"demanda-agregada"), SH("IS",1), T("Y",1), T("demanda por moeda",1), T("r",1), T("I",-1) ],
-  T:  [ T("renda disponível",-1,null,"renda-disponivel"), T("consumo",-1), SH("IS",-1), T("Y",-1), T("r",-1), T("I",1) ],
-  M:  [ T("oferta real M/P",1,null,"oferta-real"), SH("LM",1), T("r",-1), T("I",1), T("Y",1) ],
-  rbar:[ T("sem efeito: aqui o juro é resultado",0,null,"juro") ],
-  P:  [ T("oferta real M/P",-1,null,"oferta-real"), SH("LM",-1), T("r",1), T("I",-1), T("Y",-1) ],
-  k:  [ T("moeda por real de renda",1,null,"motivo-transacao"), RO("LM",false), T("r",1), T("Y",-1) ],
+  G:  [ T("demanda agregada",1,null,"demanda-agregada"), SH("IS",1), T("Y",1), T("demanda por moeda",1), T("i",1), T("I",-1) ],
+  T:  [ T("renda disponível",-1,null,"renda-disponivel"), T("consumo",-1), SH("IS",-1), T("Y",-1), T("i",-1), T("I",1) ],
+  M:  [ T("oferta real M/P",1,null,"oferta-real"), SH("LM",1), T("i",-1), T("I",1), T("Y",1) ],
+  ibar:[ T("sem efeito: aqui o juro é resultado",0,null,"juro") ],
+  P:  [ T("oferta real M/P",-1,null,"oferta-real"), SH("LM",-1), T("i",1), T("I",-1), T("Y",-1) ],
+  k:  [ T("moeda por real de renda",1,null,"motivo-transacao"), RO("LM",false), T("i",1), T("Y",-1) ],
   h:  [ T("sensibilidade da moeda ao juro",1,null,"motivo-especulacao"), RO("LM",true), T("crowding out",-1,null,"crowding-out"), T("força da política fiscal",1,null,"politica-fiscal") ]
 };
 
-/* Sob meta de juros o elo "Y sobe → r sobe → I cai" simplesmente não existe:
+/* Sob meta de juros o elo "Y sobe → i sobe → I cai" simplesmente não existe:
    o Banco Central acomoda a demanda por moeda e o juro fica onde ele decidiu. */
-var CHAINS_R = {
-  C0: [ T("consumo autônomo",1), T("demanda agregada",1,null,"demanda-agregada"), SH("IS",1), T("Y",1), T("o BC entrega a moeda",0,"LM","meta-juros"), T("r fica na meta",0) ],
-  c:  [ T("consumo por real de renda",1), T("multiplicador",1,null,"multiplicador"), RO("IS",true), T("Y",1), T("r fica na meta",0) ],
-  I0: [ T("investimento autônomo",1), T("demanda agregada",1,null,"demanda-agregada"), SH("IS",1), T("Y",1), T("r fica na meta",0) ],
+var CHAINS_META = {
+  C0: [ T("consumo autônomo",1), T("demanda agregada",1,null,"demanda-agregada"), SH("IS",1), T("Y",1), T("o BC entrega a moeda",0,"LM","meta-juros"), T("i fica na meta",0) ],
+  c:  [ T("consumo por real de renda",1), T("multiplicador",1,null,"multiplicador"), RO("IS",true), T("Y",1), T("i fica na meta",0) ],
+  I0: [ T("investimento autônomo",1), T("demanda agregada",1,null,"demanda-agregada"), SH("IS",1), T("Y",1), T("i fica na meta",0) ],
   b:  [ T("reação do investimento ao juro",1), RO("IS",true), T("investimento ao juro da meta",-1), T("Y",-1) ],
-  G:  [ T("demanda agregada",1,null,"demanda-agregada"), SH("IS",1), T("Y",1), T("demanda por moeda",1), T("o BC emite para segurar r̄",0,"LM","meta-juros"), T("sem crowding out",0,null,"crowding-out") ],
-  T:  [ T("renda disponível",-1,null,"renda-disponivel"), T("consumo",-1), SH("IS",-1), T("Y",-1), T("r fica na meta",0) ],
+  G:  [ T("demanda agregada",1,null,"demanda-agregada"), SH("IS",1), T("Y",1), T("demanda por moeda",1), T("o BC emite para segurar ī",0,"LM","meta-juros"), T("sem crowding out",0,null,"crowding-out") ],
+  T:  [ T("renda disponível",-1,null,"renda-disponivel"), T("consumo",-1), SH("IS",-1), T("Y",-1), T("i fica na meta",0) ],
   M:  [ T("sem efeito: a moeda virou resultado",0,"LM","meta-juros") ],
-  rbar:[ T("a LM sobe até a nova meta",1,"LM","curva-lm"), T("custo do crédito",1), T("investimento",-1), T("Y",-1), T("moeda necessária",-1,"LM") ],
+  ibar:[ T("a LM sobe até a nova meta",1,"LM","curva-lm"), T("custo do crédito",1), T("investimento",-1), T("Y",-1), T("moeda necessária",-1,"LM") ],
   P:  [ T("moeda nominal que o BC precisa emitir",1,"LM","oferta-real"), T("Y não muda",0) ],
   k:  [ T("moeda por real de renda",1,null,"motivo-transacao"), T("o BC precisa emitir mais",1,"LM"), T("Y não muda",0) ],
   h:  [ T("sensibilidade da moeda ao juro",1,null,"motivo-especulacao"), T("moeda necessária",-1,"LM"), T("Y não muda",0) ]
@@ -252,23 +252,23 @@ var SCENARIOS = [
     story:"Terceiro trimestre seguido de inflação acima do teto, e o Banco Central reagiu sem meias palavras: a mesa de open market vendeu títulos até recolher mais da metade do dinheiro em circulação. Projetos de ampliação voltaram para a gaveta.",
     watch:"Desta vez a curva que anda é a LM, para a esquerda, e o equilíbrio corre sobre a IS parada: produto 833, juro 6,33 %, investimento realizado de 150 para 83. É o espelho exato do pacote de obras, onde a IS andava e o equilíbrio subia pela LM." },
 
-  { id:"corte", section:"Decisões de política", mode:"juros", name:"Copom derruba a meta", set:{ rbar:2 },
+  { id:"corte", section:"Decisões de política", mode:"juros", name:"Copom derruba a meta", set:{ ibar:2 },
     story:"Por unanimidade, o Copom levou a meta de 5 % para 2 %, depois de meses de inflação comportada e atividade fraca. O comunicado foi curto: a taxa fica onde o Banco Central mandar, e a mesa que se vire para entregar.",
     watch:"Sob meta de juros a LM deita na altura escolhida, agora 2,00 %, e o equilíbrio desliza pela IS até 1.375. O investimento realizado dobra, de 150 para 300, e o consumo induzido completa o resto do salto. Para sustentar a meta, o BC levou a moeda real de 300 a 705." },
 
-  { id:"selic", section:"Decisões de política", mode:"juros", name:"Obras com a meta intacta", set:{ G:450, rbar:5 },
+  { id:"selic", section:"Decisões de política", mode:"juros", name:"Obras com a meta intacta", set:{ G:450, ibar:5 },
     story:"Fazenda e Banco Central apareceram juntos na coletiva, coisa rara o bastante para virar manchete: o pacote de obras de 200 bilhões iria a voto e a meta de juros não mudaria. Nos bastidores discutia-se se era coordenação madura ou um BC abrindo mão de dizer não.",
     watch:"Com o juro cravado em 5,00 %, a IS anda 500 e o produto vai junto, a 1.500: multiplicador cheio de 2,50, investimento realizado intacto em 150. O mesmo pacote com o BC controlando a moeda rendeu só 222 e o juro foi a 7,22 %. O preço: moeda real de 300 a 600." },
 
   { id:"classico", section:"Mundos teóricos", mode:"moeda", name:"A moeda que só circula", set:{ h:0, M:600 },
     story:"Aqui o dinheiro não espera juro nenhum: sai da conta para pagar salário, insumo e imposto, e o que fica parado depende só do tamanho das transações. É o mundo em que o monetarista aposta quando diz que gasto público não cria renda, só encarece o crédito.",
-    watch:"Y* e r* não mudaram, mas a forma da LM sim: virou vertical em 1.000, onde (M/P)/k trava o produto. Sem sensibilidade da demanda por moeda ao juro, o impulso fiscal é engolido por inteiro. Arraste os gastos: a cada 50 a mais, o juro sobe 1 ponto e o produto fica em 1.000." }
+    watch:"Y* e i* não mudaram, mas a forma da LM sim: virou vertical em 1.000, onde (M/P)/k trava o produto. Sem sensibilidade da demanda por moeda ao juro, o impulso fiscal é engolido por inteiro. Arraste os gastos: a cada 50 a mais, o juro sobe 1 ponto e o produto fica em 1.000." }
 ];
 
 return {
   id:"intermediario", EPS:EPS, PARAMS:PARAMS, P_BY_ID:P_BY_ID, TABS:TABS,
   baseState:baseState, solve:solve,
-  TERMS:TERMS, CHAINS:CHAINS, CHAINS_R:CHAINS_R, SCENARIOS:SCENARIOS
+  TERMS:TERMS, CHAINS:CHAINS, CHAINS_META:CHAINS_META, SCENARIOS:SCENARIOS
 };
 
 })();

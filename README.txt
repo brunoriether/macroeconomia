@@ -89,16 +89,20 @@ NÍVEL 1 — CRUZ KEYNESIANA (modelo-simplificado.html)
 
 NÍVEL 2 — IS-LM (modelo-intermediario.html)
 
-  Bens : Y = C + I + G,  C = C₀ + c(Y − T),  I = I₀ − b·r
-  Moeda: M/P = k·Y − h·r
-  IS   : (1 − c)·Y = A − b·r
+  Bens : Y = C + I + G,  C = C₀ + c(Y − T),  I = I₀ − b·i
+  Moeda: M/P = k·Y − h·i
+  IS   : (1 − c)·Y = A − b·i
   Equilíbrio, com D = h(1−c) + b·k:
      Y* = (h·A + b·M/P) / D
-     r* = (k·A − (1−c)·M/P) / D
+     i* = (k·A − (1−c)·M/P) / D
 
-  11 parâmetros: C₀, c, I₀, b, G, T, M, r̄, P, k, h.
+  11 parâmetros: C₀, c, I₀, b, G, T, M, ī, P, k, h.
 
-  A forma fechada de r* NÃO divide por h de propósito: assim o caso clássico
+  Notação: o juro é i, como em Blanchard. Com preços fixos e sem inflação
+  esperada, o juro nominal e o real coincidem (i = r), e i é também a letra
+  usada na paridade de juros do Mundell-Fleming, o próximo modelo da fila.
+
+  A forma fechada de i* NÃO divide por h de propósito: assim o caso clássico
   (h = 0, LM vertical) sai da mesma conta, sem exceção no código.
 
   DOIS REGIMES MONETÁRIOS, na aba LM:
@@ -106,7 +110,7 @@ NÍVEL 2 — IS-LM (modelo-intermediario.html)
     "a quantidade de moeda"  IS-LM de Hicks. O BC fixa M e o juro sai do
                              cruzamento. É o modelo do livro-texto.
 
-    "a taxa de juros"        IS-MP (Romer, 2000). O BC fixa a meta r̄ e entrega
+    "a taxa de juros"        IS-MP (Romer, 2000). O BC fixa a meta ī e entrega
                              toda a moeda demandada àquele preço. A LM vira
                              HORIZONTAL, a moeda vira resultado e o crowding
                              out desaparece. É como os bancos centrais operam
@@ -122,7 +126,7 @@ NÍVEL 2 — IS-LM (modelo-intermediario.html)
 
                         | meta de moeda | meta de juros
       Y*                | 1.000 → 1.222 | 1.000 → 1.500
-      r*                | 5,00 → 7,22 % | 5,00 → 5,00 %
+      i*                | 5,00 → 7,22 % | 5,00 → 5,00 %
       multiplicador     |     1,11×     |     2,50×  (o cheio)
       engolido pelo juro|     55,6 %    |       0 %
       moeda             | escolhida 300 | calculada: 300 → 600
@@ -191,8 +195,8 @@ NÍVEL 3 — MUNDELL-FLEMING (economia aberta)
   É o próximo da fila. Entram:
     - exportações líquidas: NX = X₀ − m·Y + n·e   (e = câmbio real)
     - mobilidade de capital e a curva BP
-    - a atratividade do dólar contra a do real: o diferencial r − r*
-      internacional puxando capital para dentro ou para fora
+    - a atratividade do dólar contra a do real: o diferencial entre o juro
+      interno e o externo puxando capital para dentro ou para fora
     - regime cambial (fixo ou flutuante) como uma segunda chave, igual à
       chave de regime monetário que já existe no nível 2
 
@@ -213,7 +217,7 @@ CAMADA DE JOGO
   - Modo diagnóstico (quiz invertido): o app aplica um choque secreto, mostra
     só o antes e o depois, e pergunta o que aconteceu. Treina o raciocínio
     efeito → causa, que é o que cai na prova.
-  - Modo desafio: uma meta ("leve Y para a faixa 1.700-1.800 sem deixar r
+  - Modo desafio: uma meta ("leve Y para a faixa 1.700-1.800 sem deixar i
     passar de 8 %") com um orçamento de movimentos. Força o aluno a descobrir
     sozinho o mix fiscal-monetário.
   - Jogo por turnos com cartas de evento (choque do petróleo, fuga de capital,

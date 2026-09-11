@@ -82,9 +82,9 @@
           <div class="result-delta" id="dY"></div>
         </div>
         <div class="result">
-          <div class="result-label" id="labR"></div>
-          <div class="result-val"><span id="outR">—</span><u> % a.a.</u></div>
-          <div class="result-delta" id="dR"></div>
+          <div class="result-label" id="labI"></div>
+          <div class="result-val"><span id="outI">—</span><u> % a.a.</u></div>
+          <div class="result-delta" id="dI"></div>
         </div>
         <div class="result">
           <div class="result-label" id="labK"></div>
@@ -140,7 +140,7 @@
    monetário corrente é estado DA PÁGINA, e entra em solve() como argumento. */
 var M = MODELO_INTER;
 var EPS = M.EPS, PARAMS = M.PARAMS, P_BY_ID = M.P_BY_ID, TABS = M.TABS,
-    TERMS = M.TERMS, CHAINS = M.CHAINS, CHAINS_R = M.CHAINS_R,
+    TERMS = M.TERMS, CHAINS = M.CHAINS, CHAINS_META = M.CHAINS_META,
     SCENARIOS = M.SCENARIOS, baseState = M.baseState;
 var mode = "moeda";
 function solve(st, md) { return M.solve(st, md || mode); }
@@ -188,7 +188,7 @@ function vezes(a, b) { return a + " \u00d7 " + b; }
 function term(key, label) {
   var txt = label || TERMS[key].t;
   return txt + '<button type="button" class="term" data-term="' + key +
-    '" aria-expanded="false" aria-label="Definição: ' + txt.replace(/"/g, "") + '">ⓘ</button>';
+    '" aria-expanded="false" aria-label="Definição: ' + txt.replace(/<[^>]*>/g, "").replace(/"/g, "") + '">ⓘ</button>';
 }
 
 /* ═══ ESTADO ═══ */
@@ -199,7 +199,7 @@ var ghost = null, lastMove = null, dragBase = null, animId = 0, pendingTarget = 
    controles). loadedScenario = qual cenário está carregado, e esse nunca
    fica vazio — é o que mantém o texto na tela e o gráfico parado. */
 var activeScenario = "base", loadedScenario = "base", tab = "IS", emphasis = "IS";
-var view = { Ymin:0, Ymax:2000, rMin:0, rMax:15 };
+var view = { Ymin:0, Ymax:2000, iMin:0, iMax:15 };
 
 var PAD = { l:62, r:64, t:24, b:44 };
 var VB = { w:720, h:420 };
@@ -217,52 +217,52 @@ function el(tag, attrs, text) {
 /* ═══ ESCALAS ═══ */
 
 function sx(Y) { return PLOT.x + (Y - view.Ymin) / (view.Ymax - view.Ymin) * PLOT.w; }
-function sy(r) { return PLOT.y + (view.rMax - r) / (view.rMax - view.rMin) * PLOT.h; }
+function sy(i) { return PLOT.y + (view.iMax - i) / (view.iMax - view.iMin) * PLOT.h; }
 function ix(px) { return view.Ymin + (px - PLOT.x) / PLOT.w * (view.Ymax - view.Ymin); }
-function iy(py) { return view.rMax - (py - PLOT.y) / PLOT.h * (view.rMax - view.rMin); }
+function iy(py) { return view.iMax - (py - PLOT.y) / PLOT.h * (view.iMax - view.iMin); }
 
 function clipLine(line) {
   if (line.vertical) {
     if (!isFinite(line.at) || line.at < view.Ymin || line.at > view.Ymax) return null;
-    return [{ Y:line.at, r:view.rMin }, { Y:line.at, r:view.rMax }];
+    return [{ Y:line.at, i:view.iMin }, { Y:line.at, i:view.iMax }];
   }
   var m = line.m, q = line.q;
   if (!isFinite(m) || !isFinite(q)) return null;
   var lo = view.Ymin, hi = view.Ymax;
   if (Math.abs(m) > EPS) {
-    var a = (view.rMin - q) / m, b = (view.rMax - q) / m;
+    var a = (view.iMin - q) / m, b = (view.iMax - q) / m;
     lo = Math.max(lo, Math.min(a, b));
     hi = Math.min(hi, Math.max(a, b));
-  } else if (q < view.rMin || q > view.rMax) return null;
+  } else if (q < view.iMin || q > view.iMax) return null;
   if (hi - lo <= EPS) return null;
-  return [{ Y:lo, r:m * lo + q }, { Y:hi, r:m * hi + q }];
+  return [{ Y:lo, i:m * lo + q }, { Y:hi, i:m * hi + q }];
 }
 
 var NICE_Y = [500, 1000, 2000, 4000, 8000, 16000, 32000, 64000];
-var NICE_R = [5, 10, 15, 20, 30, 40, 60, 90, 120];
-var NICE_RMIN = [0, -5, -10, -20, -40, -80];
+var NICE_I = [5, 10, 15, 20, 30, 40, 60, 90, 120];
+var NICE_IMIN = [0, -5, -10, -20, -40, -80];
 
 /* A moldura cresce quando o equilíbrio encosta na borda e só encolhe com folga
    larga: se a régua se reajustasse a cada quadro, mexer um slider pareceria
    não mover a curva — que é justamente o que a tela existe para mostrar. */
 function fitView(eq) {
-  if (!isFinite(eq.Y) || !isFinite(eq.r)) return;
+  if (!isFinite(eq.Y) || !isFinite(eq.i)) return;
   var yi = NICE_Y.indexOf(view.Ymax); if (yi < 0) yi = 2;
   while (yi < NICE_Y.length - 1 && eq.Y > 0.88 * NICE_Y[yi]) yi++;
   while (yi > 0 && eq.Y < 0.28 * NICE_Y[yi - 1]) yi--;
   view.Ymax = NICE_Y[yi];
 
-  var ri = NICE_R.indexOf(view.rMax); if (ri < 0) ri = 2;
-  while (ri < NICE_R.length - 1 && eq.r > 0.88 * NICE_R[ri]) ri++;
-  while (ri > 0 && eq.r < 0.28 * NICE_R[ri - 1] && eq.r > view.rMin) ri--;
-  view.rMax = NICE_R[ri];
+  var ri = NICE_I.indexOf(view.iMax); if (ri < 0) ri = 2;
+  while (ri < NICE_I.length - 1 && eq.i > 0.88 * NICE_I[ri]) ri++;
+  while (ri > 0 && eq.i < 0.28 * NICE_I[ri - 1] && eq.i > view.iMin) ri--;
+  view.iMax = NICE_I[ri];
 
-  var mi = NICE_RMIN.indexOf(view.rMin); if (mi < 0) mi = 0;
-  while (mi < NICE_RMIN.length - 1 && eq.r < NICE_RMIN[mi] + 0.12 * (view.rMax - NICE_RMIN[mi])) mi++;
-  while (mi > 0 && eq.r > NICE_RMIN[mi - 1] + 0.10 * (view.rMax - NICE_RMIN[mi - 1])) mi--;
-  view.rMin = NICE_RMIN[mi];
+  var mi = NICE_IMIN.indexOf(view.iMin); if (mi < 0) mi = 0;
+  while (mi < NICE_IMIN.length - 1 && eq.i < NICE_IMIN[mi] + 0.12 * (view.iMax - NICE_IMIN[mi])) mi++;
+  while (mi > 0 && eq.i > NICE_IMIN[mi - 1] + 0.10 * (view.iMax - NICE_IMIN[mi - 1])) mi--;
+  view.iMin = NICE_IMIN[mi];
 }
-function resetView() { view = { Ymin:0, Ymax:2000, rMin:0, rMax:15 }; }
+function resetView() { view = { Ymin:0, Ymax:2000, iMin:0, iMax:15 }; }
 
 function ticks(min, max, count) {
   var raw = (max - min) / count;
@@ -282,10 +282,10 @@ function drawFrame() {
   $("clipR").setAttribute("x", PLOT.x); $("clipR").setAttribute("y", PLOT.y);
   $("clipR").setAttribute("width", PLOT.w); $("clipR").setAttribute("height", PLOT.h);
 
-  ticks(view.rMin, view.rMax, 5).forEach(function (r) {
-    var y = sy(r);
+  ticks(view.iMin, view.iMax, 5).forEach(function (i) {
+    var y = sy(i);
     g.appendChild(el("line", { class:"grid-line", x1:PLOT.x, y1:y, x2:PLOT.x + PLOT.w, y2:y }));
-    a.appendChild(el("text", { class:"tick-text", x:PLOT.x - 10, y:y + 4, "text-anchor":"end" }, f0.format(r)));
+    a.appendChild(el("text", { class:"tick-text", x:PLOT.x - 10, y:y + 4, "text-anchor":"end" }, f0.format(i)));
   });
   ticks(view.Ymin, view.Ymax, 5).forEach(function (Y) {
     a.appendChild(el("text", { class:"tick-text", x:sx(Y), y:PLOT.y + PLOT.h + 20, "text-anchor":"middle" }, f0.format(Y)));
@@ -299,13 +299,13 @@ function drawFrame() {
 
 function pathOf(line) {
   var s = clipLine(line);
-  return s ? "M " + sx(s[0].Y).toFixed(2) + " " + sy(s[0].r).toFixed(2) +
-             " L " + sx(s[1].Y).toFixed(2) + " " + sy(s[1].r).toFixed(2) : null;
+  return s ? "M " + sx(s[0].Y).toFixed(2) + " " + sy(s[0].i).toFixed(2) +
+             " L " + sx(s[1].Y).toFixed(2) + " " + sy(s[1].i).toFixed(2) : null;
 }
 
 function drawArrow(a, b, layer) {
-  if (!a || !isFinite(a.Y) || !isFinite(b.Y) || !isFinite(a.r) || !isFinite(b.r)) return;
-  var x1 = sx(a.Y), y1 = sy(a.r), x2 = sx(b.Y), y2 = sy(b.r);
+  if (!a || !isFinite(a.Y) || !isFinite(b.Y) || !isFinite(a.i) || !isFinite(b.i)) return;
+  var x1 = sx(a.Y), y1 = sy(a.i), x2 = sx(b.Y), y2 = sy(b.i);
   var dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy);
   if (len < 8) return;
   var ux = dx / len, uy = dy / len;
@@ -326,7 +326,7 @@ function labelFor(line, name, cls) {
   var pt = seg[1], px, anchor;
   if (sx(pt.Y) >= PLOT.x + PLOT.w - 4) { px = VB.w - 6; anchor = "end"; }
   else { px = Math.min(sx(pt.Y) + 9, VB.w - 6); anchor = "start"; }
-  return { x:px, y:Math.max(PLOT.y + 12, Math.min(PLOT.y + PLOT.h - 6, sy(pt.r) + 4)), anchor:anchor, name:name, cls:cls };
+  return { x:px, y:Math.max(PLOT.y + 12, Math.min(PLOT.y + PLOT.h - 6, sy(pt.i) + 4)), anchor:anchor, name:name, cls:cls };
 }
 
 function draw(eq) {
@@ -340,7 +340,7 @@ function draw(eq) {
       var d = pathOf(p[1]);
       if (d) gh.appendChild(el("path", { class:"ghost " + p[0], d:d }));
     });
-    if (isFinite(g2.Y)) gh.appendChild(el("circle", { class:"ghost-ring", cx:sx(g2.Y), cy:sy(g2.r), r:4 }));
+    if (isFinite(g2.Y)) gh.appendChild(el("circle", { class:"ghost-ring", cx:sx(g2.Y), cy:sy(g2.i), r:4 }));
   }
   gh.setAttribute("opacity", ghost ? 1 : 0);
 
@@ -355,8 +355,8 @@ function draw(eq) {
     cl.appendChild(g);
   });
 
-  if (eq.ok && isFinite(eq.Y) && isFinite(eq.r)) {
-    var X = sx(eq.Y), Y = sy(eq.r);
+  if (eq.ok && isFinite(eq.Y) && isFinite(eq.i)) {
+    var X = sx(eq.Y), Y = sy(eq.i);
     if (X >= PLOT.x - 1 && X <= PLOT.x + PLOT.w + 1 && Y >= PLOT.y - 1 && Y <= PLOT.y + PLOT.h + 1) {
       mk.appendChild(el("line", { class:"guide", x1:X, y1:Y, x2:X, y2:PLOT.y + PLOT.h }));
       mk.appendChild(el("line", { class:"guide", x1:PLOT.x, y1:Y, x2:X, y2:Y }));
@@ -364,7 +364,7 @@ function draw(eq) {
       mk.appendChild(el("circle", { class:"ring", cx:X, cy:Y, r:8 }));
       mk.appendChild(el("circle", { class:"dot", cx:X, cy:Y, r:2.5 }));
       lb.appendChild(el("text", { class:"eqmark", x:X, y:PLOT.y + PLOT.h - 9, "text-anchor":"middle" }, fmt(eq.Y, 0)));
-      lb.appendChild(el("text", { class:"eqmark", x:PLOT.x + 9, y:Y - 8, "text-anchor":"start" }, fmt(eq.r, 1) + " %"));
+      lb.appendChild(el("text", { class:"eqmark", x:PLOT.x + 9, y:Y - 8, "text-anchor":"start" }, fmt(eq.i, 1) + " %"));
     }
   }
 
@@ -377,7 +377,7 @@ function draw(eq) {
 
 function renderResults(eq) {
   $("outY").textContent = eq.ok ? fmt(eq.Y, 0) : "—";
-  $("outR").textContent = eq.ok ? fmt(eq.r, 2) : "—";
+  $("outI").textContent = eq.ok ? fmt(eq.i, 2) : "—";
   // C e I são realizados: já descontam o juro de equilíbrio
   $("compo").innerHTML = [["C", eq.C], ["I", eq.I], ["G", state.G]].map(function (x) {
     return "<span><i>" + x[0] + "</i>" + fmt(x[1], 0) + "</span>";
@@ -386,21 +386,21 @@ function renderResults(eq) {
   if (ghost && eq.ok) {
     var g = solve(ghost, ghost.__mode || mode);
     $("dY").textContent = sign(eq.Y - g.Y, 0) + " bi vs. antes";
-    $("dR").textContent = sign(eq.r - g.r, 2) + " p.p. vs. antes";
-  } else { $("dY").textContent = ""; $("dR").textContent = ""; }
+    $("dI").textContent = sign(eq.i - g.i, 2) + " p.p. vs. antes";
+  } else { $("dY").textContent = ""; $("dI").textContent = ""; }
 
   var isTxt = eq.IS.vertical ? "Y = " + fmt(eq.IS.at, 0) + "   (vertical)"
-            : "r = " + fmt(eq.IS.q, 2) + (eq.IS.m < 0 ? " − " : " + ") + f4.format(Math.abs(eq.IS.m)) + " · Y";
-  var lmTxt = eq.LM.pegged ? "r = " + fmt(eq.LM.q, 2) + "   (meta do Banco Central)"
+            : "i = " + fmt(eq.IS.q, 2) + (eq.IS.m < 0 ? " − " : " + ") + f4.format(Math.abs(eq.IS.m)) + " · Y";
+  var lmTxt = eq.LM.pegged ? "i = " + fmt(eq.LM.q, 2) + "   (meta do Banco Central)"
             : eq.LM.vertical ? "Y = " + fmt(eq.LM.at, 0) + "   (vertical)"
-            : "r = " + fmt(eq.LM.q, 2) + " + " + f4.format(eq.LM.m) + " · Y";
+            : "i = " + fmt(eq.LM.q, 2) + " + " + f4.format(eq.LM.m) + " · Y";
 
   var c2 = fmt(state.c, 2);
-  var r2 = fmt(eq.r, 2);
+  var i2 = fmt(eq.i, 2);
   var den = eq.den;
 
   var c2 = fmt(state.c, 2);
-  var r2 = fmt(eq.r, 2);
+  var i2 = fmt(eq.i, 2);
   var den = eq.den;
 
   $("eqs").innerHTML =
@@ -410,8 +410,8 @@ function renderResults(eq) {
       ["consumo", "C = C\u2080 + c(Y \u2212 T)",
         fmt(eq.C, 0) + " = " + fmt(state.C0, 0) + " + " +
         vezes(c2, "(" + fmt(eq.Y, 0) + " \u2212 " + fmt(state.T, 0) + ")"), "R$ bi"],
-      ["investimento", "I = I\u2080 \u2212 b\u00b7r",
-        fmt(eq.I, 0) + " = " + fmt(state.I0, 0) + " \u2212 " + vezes(fmt(state.b, 0), r2), "R$ bi"],
+      ["investimento", "I = I\u2080 \u2212 b\u00b7i",
+        fmt(eq.I, 0) + " = " + fmt(state.I0, 0) + " \u2212 " + vezes(fmt(state.b, 0), i2), "R$ bi"],
       ["poupan\u00e7a privada", "S = Y \u2212 T \u2212 C",
         fmt(eq.S, 0) + " = " + fmt(eq.Y, 0) + " \u2212 " + fmt(state.T, 0) + " \u2212 " + fmt(eq.C, 0), "R$ bi"],
       ["gasto aut\u00f4nomo", "A = C\u2080 \u2212 cT + I\u2080 + G",
@@ -421,9 +421,9 @@ function renderResults(eq) {
     '<div class="eqcol">' +
       grupo("lm", "LM", mode === "juros" ? "meta de juros do Banco Central" : "mercado de moeda", [
         ["a reta", null, lmTxt, null],
-        [mode === "juros" ? "moeda entregue" : "moeda real", "M/P = k\u00b7Y \u2212 h\u00b7r",
+        [mode === "juros" ? "moeda entregue" : "moeda real", "M/P = k\u00b7Y \u2212 h\u00b7i",
           fmt(eq.mp, 0) + " = " + vezes(fmt(state.k, 2), fmt(eq.Y, 0)) +
-          " \u2212 " + vezes(fmt(state.h, 0), r2), "R$ bi"]
+          " \u2212 " + vezes(fmt(state.h, 0), i2), "R$ bi"]
       ]) +
       grupo("", "Multiplicadores", "quanto cada real vira de produto", [
         ["simples", "\u0394Y/\u0394A = 1 / (1 \u2212 c)",
@@ -453,12 +453,12 @@ function renderAlert(eq) {
   } else if (eq.Y < 0) {
     msg = "Renda de equilíbrio negativa. Essa combinação não descreve uma economia possível — reduza T ou eleve os gastos autônomos.";
   } else if (mode === "juros") {
-    msg = "Meta de juros: a LM é horizontal porque o BC entrega toda a moeda pedida a " + fmt(eq.r, 2) + " %. Sem crowding out — a política fiscal age com o multiplicador cheio (" + fmt(eq.multSimple, 2) + "×), e emitir moeda deixa de mover a renda.";
+    msg = "Meta de juros: a LM é horizontal porque o BC entrega toda a moeda pedida a " + fmt(eq.i, 2) + " %. Sem crowding out — a política fiscal age com o multiplicador cheio (" + fmt(eq.multSimple, 2) + "×), e emitir moeda deixa de mover a renda.";
   } else if (eq.LM.vertical) {
     msg = "Caso clássico: com h = 0 a LM é vertical. A renda depende só da moeda real, e gasto público apenas eleva o juro — o crowding out é total.";
   } else if (eq.IS.vertical) {
     msg = "Investimento insensível ao juro: com b = 0 a IS é vertical. Não há crowding out, porque o juro sobe sem derrubar investimento nenhum.";
-  } else if (eq.r < 0) {
+  } else if (eq.i < 0) {
     msg = "O juro de equilíbrio ficou abaixo de zero. O modelo permite; a economia real quase nunca — na prática existe um piso perto de zero.";
   } else if (ratio > 4) {
     msg = "Quase o caso clássico: a LM está muito mais inclinada que a IS, e o juro engole " + fmtPct(eq.crowding) + " de qualquer impulso fiscal.";
@@ -481,7 +481,7 @@ function renderChain() {
   }
   var p = P_BY_ID[lastMove.id];
   var flip = lastMove.dir < 0 ? -1 : 1;
-  var steps = (mode === "juros" ? CHAINS_R : CHAINS)[lastMove.id] || [];
+  var steps = (mode === "juros" ? CHAINS_META : CHAINS)[lastMove.id] || [];
 
   function chip(cls, html) {
     var n = document.createElement("div");
@@ -514,9 +514,9 @@ function syncControls(eq) {
     var input = $("in-" + p.id), row = $("row-" + p.id);
     if (!input) return;
     // o instrumento que o BC não escolheu vira resultado: trava e vira leitura
-    var locked = (mode === "juros" && p.id === "M") || (mode === "moeda" && p.id === "rbar");
+    var locked = (mode === "juros" && p.id === "M") || (mode === "moeda" && p.id === "ibar");
     var v = state[p.id];
-    if (locked && eq) v = p.id === "M" ? eq.mp * state.P : eq.r;
+    if (locked && eq) v = p.id === "M" ? eq.mp * state.P : eq.i;
     // o NÚMERO mostra o valor real mesmo fora da faixa; só o marcador é limitado
     var thumb = isFinite(v) ? Math.max(p.min, Math.min(p.max, v)) : p.min;
 
@@ -534,7 +534,7 @@ function syncControls(eq) {
       campo.style.width = Math.max(larguraCh(p), campo.value.length + 1.5) + "ch";
     }
     input.setAttribute("aria-valuetext", p.label + " " + fmtP(p, v) + (locked ? " (determinado pelo modelo)" : ""));
-    $("eff-" + p.id).textContent = mode === "juros" ? p.effR : p.eff;
+    $("eff-" + p.id).textContent = mode === "juros" ? p.effMeta : p.eff;
   });
 }
 
@@ -860,7 +860,7 @@ function setMode(m) {
   // sem arredondar ao passo do slider: o equilíbrio fica EXATAMENTE onde estava,
   // e só a forma da LM muda. O passo volta a valer no primeiro arrasto.
   function hold(p, x, fb) { return isFinite(x) ? Math.max(p.min, Math.min(p.max, x)) : fb; }
-  if (m === "juros") state.rbar = hold(P_BY_ID.rbar, eq.r, P_BY_ID.rbar.base);
+  if (m === "juros") state.ibar = hold(P_BY_ID.ibar, eq.i, P_BY_ID.ibar.base);
   else state.M = hold(P_BY_ID.M, eq.mp * state.P, P_BY_ID.M.base);
 
   ghost = Object.assign({}, state);
@@ -897,7 +897,7 @@ function showPop(btn) {
   $("popU").hidden = !t.u;
   $("popD").textContent = t.d;
   var p = t.param ? P_BY_ID[t.param] : null;
-  $("popE").textContent = p ? (mode === "juros" ? p.effR : p.eff) : "";
+  $("popE").textContent = p ? (mode === "juros" ? p.effMeta : p.eff) : "";
   $("popE").hidden = !p;
 
   pop.hidden = false;
@@ -955,7 +955,7 @@ function setupTerms() {
 }
 
 /* ═══ ARRASTE DIRETO NAS CURVAS ═══ */
-/* Empurrar a IS muda G; empurrar a LM muda M (ou a meta r̄).
+/* Empurrar a IS muda G; empurrar a LM muda M (ou a meta ī).
    O equilíbrio nunca é arrastável: ele é resultado, não entrada. */
 
 function setupDrag() {
@@ -967,7 +967,7 @@ function setupDrag() {
     var px = (ev.clientX - r.left) / r.width * VB.w;
     var py = (ev.clientY - r.top) / r.height * VB.h;
     if (px < PLOT.x - 2 || px > PLOT.x + PLOT.w + 2 || py < PLOT.y - 2 || py > PLOT.y + PLOT.h + 2) return null;
-    return { Y:ix(px), r:iy(py) };
+    return { Y:ix(px), i:iy(py) };
   }
 
   svg.addEventListener("pointerdown", function (ev) {
@@ -977,7 +977,7 @@ function setupDrag() {
     if (!pt) return;
     beginGesture();
     setTab(g.dataset.curve);                    // arrastar a curva abre a aba dela
-    drag = { curve:g.dataset.curve, Y0:pt.Y, r0:pt.r, G0:state.G, M0:state.M, R0:state.rbar };
+    drag = { curve:g.dataset.curve, Y0:pt.Y, i0:pt.i, G0:state.G, M0:state.M, IB0:state.ibar };
     svg.setPointerCapture(ev.pointerId);
     ev.preventDefault();
   });
@@ -990,7 +990,7 @@ function setupDrag() {
       // deslocar a IS em ΔY exige ΔG = ΔY·(1−c)
       setParam("G", clampP(P_BY_ID.G, drag.G0 + (pt.Y - drag.Y0) * (1 - state.c)));
     } else if (mode === "juros") {
-      setParam("rbar", clampP(P_BY_ID.rbar, drag.R0 + (pt.r - drag.r0)));
+      setParam("ibar", clampP(P_BY_ID.ibar, drag.IB0 + (pt.i - drag.i0)));
     } else {
       // deslocar a LM em ΔY exige Δ(M/P) = ΔY·k, logo ΔM = ΔY·k·P
       setParam("M", clampP(P_BY_ID.M, drag.M0 + (pt.Y - drag.Y0) * state.k * state.P));
@@ -1007,7 +1007,7 @@ function setupDrag() {
 /* ═══ PARTIDA ═══ */
 
 $("labY").innerHTML = term("renda", "Renda de equilíbrio · Y*");
-$("labR").innerHTML = term("juro", "Juro de equilíbrio · r*");
+$("labI").innerHTML = term("juro", 'Juro de equilíbrio · <span class="sym">i*</span>');
 $("labK").innerHTML = term("demanda-agregada", "Composição da demanda");
 $("meterCap").innerHTML = "De cada R$&nbsp;1 de " + term("impulso-fiscal", "impulso fiscal") +
   ", quanto chega à renda e quanto some por " + term("crowding-out", "crowding out") + ":";
